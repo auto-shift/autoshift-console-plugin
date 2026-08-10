@@ -70,7 +70,7 @@ jobs:
           # The SDK validator fails here if the bundle does not match the target's contract.
           $YARN build
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # Built and scanned BEFORE registry login, so a failing scan cannot publish.
       - name: Build image
