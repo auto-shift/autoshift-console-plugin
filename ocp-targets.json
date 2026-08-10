@@ -1,0 +1,32 @@
+{
+  "_comment": [
+    "OpenShift releases this plugin is built for, one image per entry.",
+    "",
+    "A single bundle cannot span releases: the console supplies react, react-router and",
+    "react-i18next as shared singletons, and those versions change between releases \u2014 most sharply",
+    "at 4.22, where the console moved React 17 -> 18. A plugin built against the wrong set loads and",
+    "then fails silently: the pod serves assets, the console skips the plugin, and every route 404s",
+    "with nothing in any server-side log.",
+    "",
+    "Only 4.22 is built today. 4.23's SDK is still 4.23.0-prerelease.5, so its shared-module",
+    "contract can change before GA; adding it then is a data change here plus a yarn.lock.4.23,",
+    "and the CI/release matrices pick it up with no workflow edit.",
+    "",
+    "'sdk' is the SDK line whose validator enforces that release's contract; 'shared' are the",
+    "versions it expects. Verify a new entry with:",
+    "  ./scripts/set-ocp-target.sh <minor> && yarn install && yarn build",
+    "A mismatch is reported as 'Console provides shared module X but plugin uses Y'."
+  ],
+  "targets": {
+    "4.22": {
+      "sdk": "4.22-latest",
+      "shared": {
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "react-router": "~7.13.1",
+        "react-i18next": "~16.5.8"
+      },
+      "pluginAPI": ">=4.22.0-0 <4.23.0-0"
+    }
+  }
+}

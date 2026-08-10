@@ -1,0 +1,140 @@
+/* All classes are prefixed with the plugin name so they cannot collide with console or
+ * PatternFly styles. Colours come from PatternFly semantic tokens so dark mode works. */
+
+.autoshift-console__muted {
+  color: var(--pf-t--global--text--color--subtle);
+}
+
+.autoshift-console__path {
+  font-size: var(--pf-t--global--font--size--sm);
+}
+
+/* Provenance chain: the winning layer is emphasised, superseded layers struck through. */
+.autoshift-console__chain {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--xs);
+}
+
+.autoshift-console__arrow {
+  color: var(--pf-t--global--text--color--subtle);
+  margin-inline: var(--pf-t--global--spacer--xs);
+}
+
+.autoshift-console__superseded {
+  color: var(--pf-t--global--text--color--subtle);
+  text-decoration: line-through;
+}
+
+.autoshift-console__wins {
+  color: var(--pf-t--global--text--color--regular);
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+}
+
+.autoshift-console__inline-label {
+  margin-inline-start: var(--pf-t--global--spacer--sm);
+}
+
+.autoshift-console__summary {
+  margin-block-end: var(--pf-t--global--spacer--lg);
+}
+
+.autoshift-console__tab-intro {
+  margin-block: var(--pf-t--global--spacer--md);
+  color: var(--pf-t--global--text--color--subtle);
+}
+
+.autoshift-console__filter {
+  margin-block-end: var(--pf-t--global--spacer--md);
+}
+
+.autoshift-console__stack {
+  margin-block-end: var(--pf-t--global--spacer--lg);
+}
+
+/* Cluster set feature list */
+.autoshift-console__feature {
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+}
+
+.autoshift-console__value {
+  font-size: var(--pf-t--global--font--size--sm);
+  overflow-wrap: anywhere;
+}
+
+/* Expanded detail panels (cluster-set features, compliance verdicts) share one shape: a control
+ * bar, then a single table. Showing every section at once left no way to narrow anything. */
+.autoshift-console__detail {
+  padding-block: var(--pf-t--global--spacer--sm);
+}
+
+
+.autoshift-console__members {
+  color: var(--pf-t--global--text--color--subtle);
+  font-size: var(--pf-t--global--font--size--sm);
+  margin-block-end: var(--pf-t--global--spacer--md);
+}
+
+.autoshift-console__enabled {
+  margin-block-end: var(--pf-t--global--spacer--md);
+}
+
+.autoshift-console__set-table {
+  margin-block-start: var(--pf-t--global--spacer--md);
+}
+
+.autoshift-console__footnote {
+  color: var(--pf-t--global--text--color--subtle);
+}
+
+/* Fleet header tiles */
+.autoshift-console__tiles {
+  margin-block-end: var(--pf-t--global--spacer--lg);
+}
+
+.autoshift-console__tile {
+  min-width: 10rem;
+}
+
+.autoshift-console__tile-value {
+  font-size: var(--pf-t--global--font--size--3xl);
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+  line-height: 1.1;
+}
+
+.autoshift-console__tile-value--warn {
+  color: var(--pf-t--global--icon--color--status--warning--default);
+}
+
+.autoshift-console__tile-value--danger {
+  color: var(--pf-t--global--icon--color--status--danger--default);
+}
+
+.autoshift-console__tile-label {
+  color: var(--pf-t--global--text--color--subtle);
+  font-size: var(--pf-t--global--font--size--sm);
+}
+
+.autoshift-console__grouping {
+  margin-block-end: var(--pf-t--global--spacer--lg);
+  align-items: center;
+}
+
+.autoshift-console__notice {
+  margin-block-end: var(--pf-t--global--spacer--md);
+}
+
+.autoshift-console__subtle {
+  color: var(--pf-t--global--text--color--subtle);
+  font-size: var(--pf-t--global--font--size--xs);
+}
+
+.autoshift-console__detail-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pf-t--global--spacer--md);
+  align-items: center;
+  margin-block-end: var(--pf-t--global--spacer--md);
+}
+

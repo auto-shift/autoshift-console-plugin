@@ -1,0 +1,400 @@
+import { useMemo, useState } from 'react';
+import {
+  Card,
+  CardBody,
+  CardTitle,
+  Content,
+  EmptyState,
+  EmptyStateBody,
+  Label,
+  SearchInput,
+  ToggleGroup,
+  ToggleGroupItem,
+  Split,
+  SplitItem,
+} from '@patternfly/react-core';
+import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { useTranslation } from 'react-i18next';
+import type { FC } from 'react';
+import type { ClusterSetView, FeatureView } from '../types/autoshift';
+import { PageFrame } from './common/PageFrame';
+import { formatValue, labelState } from '../lib/config';
+import { ArgoLabel } from './common/status';
+
+import './autoshift.css';
+
+/** A label value rendered by meaning rather than by raw string. */
+const ValueLabel: FC<{ name: string; value?: string }> = ({ name, value }) => {
+  const { t } = useTranslation('plugin__autoshift-console');
+  const state = labelState(name, value);
+  if (state === 'on') {
+    return (
+      <Label isCompact color="green">
+        {t('on')}
+      </Label>
+    );
+  }
+  if (state === 'off') {
+    return (
+      <Label isCompact color="grey">
+        {t('off')}
+      </Label>
+    );
+  }
+  return <span className="autoshift-console__value">{value === '' ? '—' : value}</span>;
+};
+
+/** Expanded detail for one feature: its labels, its config block, and what delivers it. */
+type DetailView = 'labels' | 'config' | 'consumers';
+
+/**
+ * Expanded detail for one feature.
+ *
+ * Deliberately the same shape as ComplianceDetail — a toggle to pick the view, a search box, and a
+ * single table — rather than three stacked sections. Three tables at once gave no way to narrow
+ * anything and made a feature like gitlab (24 labels) a long scroll.
+ */
+const FeatureDetail: FC<{ feature: FeatureView }> = ({ feature }) => {
+  const { t } = useTranslation('plugin__autoshift-console');
+  const [view, setView] = useState<DetailView>('labels');
+  const [filter, setFilter] = useState('');
+  const needle = filter.trim().toLowerCase();
+
+  const labelRows = useMemo(() => {
+    const rows =
+      feature.value === undefined
+        ? feature.settings
+        : [{ key: feature.name, value: feature.value }, ...feature.settings];
+    return needle ? rows.filter((r) => r.key.toLowerCase().includes(needle)) : rows;
+  }, [feature, needle]);
+
+  const configRows = useMemo(
+    () =>
+      needle ? feature.config.filter((c) => c.path.toLowerCase().includes(needle)) : feature.config,
+    [feature.config, needle],
+  );
+
+  const consumerRows = useMemo(
+    () =>
+      needle
+        ? feature.components.filter((c) => c.name.toLowerCase().includes(needle))
+        : feature.components,
+    [feature.components, needle],
+  );
+
+  const labelCount = feature.settings.length + (feature.value === undefined ? 0 : 1);
+  const empty = (message: string) => (
+    <Content component="p" className="autoshift-console__muted">
+      {message}
+    </Content>
+  );
+
+  return (
+    <div className="autoshift-console__detail">
+      <div className="autoshift-console__detail-controls">
+        <ToggleGroup aria-label={t('Feature detail view')}>
+          <ToggleGroupItem
+            text={t('Labels ({{count}})', { count: labelCount })}
+            buttonId="labels"
+            isSelected={view === 'labels'}
+            onChange={() => {
+              setView('labels');
+            }}
+          />
+          <ToggleGroupItem
+            text={t('Config ({{count}})', { count: feature.config.length })}
+            buttonId="config"
+            isSelected={view === 'config'}
+            onChange={() => {
+              setView('config');
+            }}
+          />
+          <ToggleGroupItem
+            text={t('Consumed by ({{count}})', { count: feature.components.length })}
+            buttonId="consumers"
+            isSelected={view === 'consumers'}
+            onChange={() => {
+              setView('consumers');
+            }}
+          />
+        </ToggleGroup>
+        <SearchInput
+          placeholder={t('Filter')}
+          value={filter}
+          onChange={(_e, value) => {
+            setFilter(value);
+          }}
+          onClear={() => {
+            setFilter('');
+          }}
+        />
+      </div>
+
+      {view === 'labels' &&
+        (labelRows.length === 0 ? (
+          empty(t('Nothing matched that filter.'))
+        ) : (
+          <Table variant="compact" aria-label={t('Labels')}>
+            <Thead>
+              <Tr>
+                <Th width={70}>{t('Label')}</Th>
+                <Th width={30}>{t('Value')}</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {labelRows.map((row) => (
+                <Tr key={row.key}>
+                  <Td dataLabel={t('Label')}>
+                    <code className="autoshift-console__path">{row.key}</code>
+                  </Td>
+                  <Td dataLabel={t('Value')}>
+                    <ValueLabel name={row.key} value={row.value} />
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        ))}
+
+      {view === 'config' &&
+        (feature.config.length === 0 ? (
+          empty(t('This feature is label-driven only — it has no config block.'))
+        ) : configRows.length === 0 ? (
+          empty(t('Nothing matched that filter.'))
+        ) : (
+          <Table variant="compact" aria-label={t('Config')}>
+            <Thead>
+              <Tr>
+                <Th width={70}>
+                  {feature.configKey
+                    ? t('Setting under {{key}}', { key: feature.configKey })
+                    : t('Setting')}
+                </Th>
+                <Th width={30}>{t('Value')}</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {configRows.map((entry) => (
+                <Tr key={entry.path}>
+                  <Td dataLabel={t('Setting')}>
+                    <code className="autoshift-console__path">{entry.path}</code>
+                  </Td>
+                  <Td dataLabel={t('Value')}>
+                    <span className="autoshift-console__value">{formatValue(entry.value)}</span>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        ))}
+
+      {view === 'consumers' &&
+        (feature.components.length === 0 ? (
+          empty(t('No policy on this hub reads these labels.'))
+        ) : consumerRows.length === 0 ? (
+          empty(t('Nothing matched that filter.'))
+        ) : (
+          <>
+            <Content component="small" className="autoshift-console__muted">
+              {t(
+                'Components whose Placement reads one of these labels — including components that merely require the feature, not only the one that provides it.',
+              )}
+            </Content>
+            <Table variant="compact" aria-label={t('Consumed by')}>
+              <Thead>
+                <Tr>
+                  <Th width={50}>{t('Component')}</Th>
+                  <Th width={25}>{t('Sync')}</Th>
+                  <Th width={25}>{t('Clusters')}</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {consumerRows.map((component) => (
+                  <Tr key={component.name}>
+                    <Td dataLabel={t('Component')}>{component.name}</Td>
+                    <Td dataLabel={t('Sync')}>
+                      <ArgoLabel status={component.syncStatus} />
+                    </Td>
+                    <Td dataLabel={t('Clusters')}>{component.clusters}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </>
+        ))}
+    </div>
+  );
+};
+
+const FeatureRows: FC<{ feature: FeatureView; rowIndex: number }> = ({ feature, rowIndex }) => {
+  const { t } = useTranslation('plugin__autoshift-console');
+  const [expanded, setExpanded] = useState(false);
+  const toggle = () => {
+    setExpanded(!expanded);
+  };
+
+  return (
+    <>
+      <Tr isClickable onRowClick={toggle}>
+        <Td
+          dataLabel={t('Feature')}
+          expand={{ rowIndex, isExpanded: expanded, onToggle: toggle }}
+        />
+        <Td dataLabel={t('Feature')}>
+          <span className="autoshift-console__feature">{feature.name}</span>
+        </Td>
+        <Td dataLabel={t('State')}>
+          <ValueLabel name={feature.name} value={feature.value} />
+        </Td>
+        <Td dataLabel={t('Labels')}>
+          {feature.settings.length + (feature.value === undefined ? 0 : 1)}
+        </Td>
+        <Td dataLabel={t('Config')}>
+          {feature.config.length === 0 ? (
+            <span className="autoshift-console__muted">—</span>
+          ) : (
+            <Label isCompact color="blue">
+              {t('{{count}} settings', { count: feature.config.length })}
+            </Label>
+          )}
+        </Td>
+        <Td dataLabel={t('Consumed by')}>
+          {feature.components.length === 0 ? (
+            <span className="autoshift-console__muted">—</span>
+          ) : (
+            feature.components.map((c) => c.name).join(', ')
+          )}
+        </Td>
+      </Tr>
+      {expanded && (
+        <Tr isExpanded>
+          <Td colSpan={6}>
+            <FeatureDetail feature={feature} />
+          </Td>
+        </Tr>
+      )}
+    </>
+  );
+};
+
+const ClusterSetCard: FC<{
+  set: ClusterSetView;
+  clusterTypes: Map<string, string | undefined>;
+}> = ({ set, clusterTypes }) => {
+  const { t } = useTranslation('plugin__autoshift-console');
+  const [filter, setFilter] = useState('');
+
+  const needle = filter.trim().toLowerCase();
+  const features = needle
+    ? set.features.filter(
+        (f) =>
+          f.name.toLowerCase().includes(needle) ||
+          f.settings.some((s) => s.key.toLowerCase().includes(needle)) ||
+          f.config.some((c) => c.path.toLowerCase().includes(needle)) ||
+          f.components.some((c) => c.name.toLowerCase().includes(needle)),
+      )
+    : set.features;
+
+  const on = set.features.filter((f) => labelState(f.name, f.value) === 'on').length;
+
+  return (
+    <Card className="autoshift-console__stack">
+      <CardTitle>
+        <Split hasGutter>
+          <SplitItem isFilled>{set.name}</SplitItem>
+          <SplitItem>
+            <Label isCompact color="green">
+              {t('{{count}} on', { count: on })}
+            </Label>{' '}
+            <Label isCompact color="grey">
+              {t('{{count}} features', { count: set.features.length })}
+            </Label>{' '}
+            <Label isCompact color="blue">
+              {t('{{count}} clusters', { count: set.clusters.length })}
+            </Label>
+          </SplitItem>
+        </Split>
+      </CardTitle>
+      <CardBody>
+        {set.clusters.length > 0 && (
+          <Content component="p" className="autoshift-console__members">
+            {set.clusters
+              .map((c) => {
+                const type = clusterTypes.get(c);
+                return type ? `${c} (${type})` : c;
+              })
+              .join(', ')}
+          </Content>
+        )}
+
+        <SearchInput
+          placeholder={t('Filter by feature, label, config path or component')}
+          value={filter}
+          onChange={(_e, value) => {
+            setFilter(value);
+          }}
+          onClear={() => {
+            setFilter('');
+          }}
+          className="autoshift-console__filter"
+        />
+
+        {features.length === 0 ? (
+          <Content component="p" className="autoshift-console__muted">
+            {t('Nothing matched.')}
+          </Content>
+        ) : (
+          <Table variant="compact" aria-label={t('Features in {{name}}', { name: set.name })}>
+            <Thead>
+              <Tr>
+                <Th screenReaderText={t('Expand')} />
+                <Th width={20}>{t('Feature')}</Th>
+                <Th width={10}>{t('State')}</Th>
+                <Th width={10}>{t('Labels')}</Th>
+                <Th width={20}>{t('Config')}</Th>
+                <Th width={40}>{t('Consumed by')}</Th>
+              </Tr>
+            </Thead>
+            {features.map((feature, i) => (
+              <Tbody key={feature.name}>
+                <FeatureRows feature={feature} rowIndex={i} />
+              </Tbody>
+            ))}
+          </Table>
+        )}
+      </CardBody>
+    </Card>
+  );
+};
+
+const ClusterSetsPage: FC = () => {
+  const { t } = useTranslation('plugin__autoshift-console');
+
+  return (
+    <PageFrame title={t('Cluster sets')}>
+      {(model) => {
+        if (model.clusterSets.length === 0) {
+          return (
+            <EmptyState titleText={t('No cluster sets')} headingLevel="h4">
+              <EmptyStateBody>
+                {t('This deployment has no cluster-set ConfigMaps in its policy namespace.')}
+              </EmptyStateBody>
+            </EmptyState>
+          );
+        }
+
+        const clusterTypes = new Map(model.clusters.map((c) => [c.name, c.clusterType]));
+
+        return (
+          <>
+            {model.clusterSets.map((set) => (
+              <ClusterSetCard key={set.name} set={set} clusterTypes={clusterTypes} />
+            ))}
+          </>
+        );
+      }}
+    </PageFrame>
+  );
+};
+
+export default ClusterSetsPage;

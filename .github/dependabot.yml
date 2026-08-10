@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Keeps the base image digests in the Dockerfile current. The weekly rebuild picks up patched
+  # bases without this, but that only refreshes the published image — this is what moves the
+  # committed pin, so ordinary PR builds are scanned against the same base that ships.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [security, dependencies]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    open-pull-requests-limit: 10
+    groups:
+      patternfly:
+        patterns: ['@patternfly/*']
+      openshift-sdk:
+        patterns: ['@openshift-console/*']
+      dev-tooling:
+        patterns: ['eslint*', 'typescript*', '@typescript-eslint/*', 'prettier*', 'stylelint*', 'jest*', '@swc/*', '@rspack/*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]

@@ -1,0 +1,13 @@
+# Accepted vulnerabilities, reviewed and justified.
+#
+# Every entry needs a CVE id, why it does not apply, and a date to revisit. An unexplained
+# suppression is indistinguishable from an unnoticed one.
+#
+# The CI gate already skips unfixed CVEs (nothing to action until Red Hat ships a fix); those are
+# reported by the weekly scan of the published image instead. So this file is only for a FIXABLE
+# HIGH/CRITICAL that genuinely does not apply here.
+#
+# Example:
+#   # CVE-2025-00000 — glibc, reachable only via a setuid path. The plugin runs as UID 1001 and
+#   # serves static files; there is no setuid binary in the image. Revisit 2026-12-01.
+#   CVE-2025-00000

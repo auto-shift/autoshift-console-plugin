@@ -1,0 +1,154 @@
+name: Release Image
+
+# One image per OpenShift target. A single bundle cannot span releases: the console supplies
+# react / react-router / react-i18next as shared singletons and those versions change between
+# releases, most sharply at 4.22 (React 17 -> 18). Mismatched bundles fail silently at load, so
+# each target is built, scanned, signed and tagged separately. Targets live in ocp-targets.json.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag to publish (e.g. v0.1.0)'
+        required: true
+
+env:
+  REGISTRY: quay.io
+  IMAGE: quay.io/autoshift/autoshift-console-plugin
+
+permissions:
+  contents: read
+
+jobs:
+  # Targets are read from ocp-targets.json so adding an OpenShift release is a data change.
+  targets:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+      version: ${{ steps.read.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: read
+        run: |
+          MATRIX=$(jq -c '{ocp: (.targets | keys)}' ocp-targets.json)
+          echo "matrix=${MATRIX}" >> "$GITHUB_OUTPUT"
+          VERSION="${{ github.event.inputs.tag }}"
+          [ -n "$VERSION" ] || VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${VERSION} for: $(jq -r '.targets | keys | join(", ")' ocp-targets.json)"
+
+  build:
+    needs: targets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.targets.outputs.matrix) }}
+    permissions:
+      contents: read
+      # cosign keyless signing: the OIDC token records which workflow produced the image.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Select OpenShift target
+        run: ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
+
+      - name: Install and build
+        run: |
+          YARN="node $(awk '/yarnPath:/{print $2}' .yarnrc.yml)"
+          # --immutable: set-ocp-target.sh installed yarn.lock.<target>, which is committed.
+          $YARN install --immutable
+          $YARN lint
+          $YARN test
+          # The SDK validator fails here if the bundle does not match the target's contract.
+          $YARN build
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Built and scanned BEFORE registry login, so a failing scan cannot publish.
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}
+          build-args: |
+            PLUGIN_VERSION=${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}
+            PLUGIN_REVISION=${{ github.sha }}
+
+      - name: Scan image (gate)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Log in to Quay
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      # Two tags per target: an immutable one pinning this release, and a floating one tracking
+      # the newest build for that OpenShift minor. There is deliberately no bare :latest — it
+      # would be ambiguous across targets and is the kind of tag that gets deployed by accident.
+      - name: Push
+        id: push
+        run: |
+          PINNED="${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}"
+          FLOATING="${{ env.IMAGE }}:ocp${{ matrix.ocp }}"
+          docker push "$PINNED"
+          docker tag "$PINNED" "$FLOATING"
+          docker push "$FLOATING"
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$PINNED" | cut -d@ -f2)
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+
+      - uses: sigstore/cosign-installer@v3
+
+      # Signed by digest, never by tag: a tag can later be moved to different content.
+      - name: Sign and attest
+        run: |
+          REF="${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
+          cosign sign --yes "$REF"
+          cosign attest --yes --predicate sbom.spdx.json --type spdxjson "$REF"
+
+      - name: Summary
+        run: |
+          {
+            echo "### OpenShift ${{ matrix.ocp }}"
+            echo ""
+            echo '```'
+            echo "${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}"
+            echo "${{ env.IMAGE }}:ocp${{ matrix.ocp }}"
+            echo "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
+            echo '```'
+            echo ""
+            echo "Pin the digest in the AutoShift clusterset running OpenShift ${{ matrix.ocp }}:"
+            echo ""
+            echo '```yaml'
+            echo "config:"
+            echo "  autoshiftConsole:"
+            echo "    image: '${{ env.IMAGE }}@${{ steps.push.outputs.digest }}'"
+            echo "    minOpenShiftVersion: '${{ matrix.ocp }}.0-0'"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

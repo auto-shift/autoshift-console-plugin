@@ -52,7 +52,7 @@ export default defineConfig({
     sort: true,
     keySeparator: false,
     nsSeparator: '~',
-    defaultNS: 'plugin__console-plugin-template', // TODO: Change me!
+    defaultNS: 'plugin__autoshift-console',
   },
   plugins: [consoleExtensionsPlugin()],
 });

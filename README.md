@@ -1,222 +1,224 @@
-# OpenShift console plugin template
+# AutoShift Console Plugin
 
-This project is a minimal template for writing a new OpenShift Console dynamic
-plugin.
+A read-only OpenShift console dynamic plugin that adds an **AutoShift** section to the Administrator
+sidebar, surfacing what [AutoShift](https://github.com/auto-shift/autoshiftv2) configures across a
+fleet of clusters.
 
-[Openshift console plugins](https://github.com/openshift/console/tree/main/frontend/packages/console-dynamic-plugin-sdk)
-allow you to extend the [OpenShift web console](https://github.com/openshift/console)
-at runtime, adding custom pages and other extensions. They are based on
-[webpack module federation](https://webpack.js.org/concepts/module-federation/).
-Plugins are registered with console using the `ConsolePlugin` custom resource
-and enabled in the console operator config by a cluster administrator.
+ACM's own console shows clusters, cluster sets and policy compliance. What it cannot show is *why* a
+cluster is configured the way it is — AutoShift resolves fleet defaults, cluster-set config and
+per-cluster overrides into a single rendered config, and that derivation is invisible. This plugin
+makes it legible, and shows where the cluster has drifted from it.
 
-The `main` branch of this repository contains an example plugin which works
-with the latest version. To see an example of a plugin which works with an older
-version, visit the appropriate `release-4.x` branch.
+## Pages
 
-[Node.js](https://nodejs.org/en/) and [yarn](https://yarnpkg.com) are required
-to build and run the example. To run OpenShift console in a container, either
-[Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io) and
-[oc](https://console.redhat.com/openshift/downloads) are required.
+| Page | Path | What it answers |
+|---|---|---|
+| **Fleet** | `/autoshift/fleet` | What does this deployment configure, and which clusters need attention? |
+| **Cluster Sets** | `/autoshift/cluster-sets` | What does each set turn on, who overrides it, and what reads it? |
+| **Clusters** | `/autoshift/clusters` | Where did each setting come from, and does the cluster match? |
+| **Stacks** | `/autoshift/stacks` | What is deployed, grouped by application stack? |
 
-## Getting started
+The Clusters page carries the **provenance drawer**: for any setting, the layer chain
 
-> [!IMPORTANT]
-> To use this template, **DO NOT FORK THIS REPOSITORY**! Click **Use this template**, then select
-> [**Create a new repository**](https://github.com/new?template_name=console-plugin-template&template_owner=openshift)
-> to create a new repository.
->
-> ![A screenshot showing where the "Use this template" button is located](https://i.imgur.com/AhaySbU.png)
->
-> **Forking this repository** for purposes outside of contributing to this repository
-> **will cause issues**, as users cannot have more than one fork of a template repository
-> at a time. This could prevent future users from forking and contributing to your plugin.
->
-> Your fork would also behave like a template repository, which might be confusing for
-> contributiors, because it is not possible for repositories generated from a template
-> repository to contribute back to the template.
-
-After cloning your instantiated repository, you must update the plugin metadata, such as the
-plugin name in the `consolePlugin` declaration of [package.json](package.json).
-
-```json
-"consolePlugin": {
-  "name": "console-plugin-template",
-  "version": "0.0.1",
-  "displayName": "My Plugin",
-  "description": "Enjoy this shiny, new console plugin!",
-  "exposedModules": {
-    "ExamplePage": "./components/ExamplePage"
-  },
-  "dependencies": {
-    "@console/pluginAPI": "*"
-  }
-}
+```
+fleet default  →  cluster-set-config.<set>  →  managed-cluster-config.<cluster>  →  rendered-config
+   gp3-csi            gp3-csi                      gp2-csi  ← wins                     gp2-csi
 ```
 
-The template adds a single example page in the Home navigation section. The
-extension is declared in the [console-extensions.json](console-extensions.json)
-file and the React component is declared in
-[src/components/ExamplePage.tsx](src/components/ExamplePage.tsx).
+with superseded values struck through, plus a desired-vs-actual comparison of the `autoshift.io/*`
+labels against what is stamped on the `ManagedCluster`.
 
-You can run the plugin using a local development environment or build an image
-to deploy it to a cluster.
+## How it discovers data
+
+**Nothing about AutoShift's policy list is compiled into this plugin.** The whole model is derived at
+runtime from objects on the hub, so a policy added to AutoShift appears here with no plugin rebuild
+and no version coupling to an AutoShift release:
+
+| What | Source |
+|---|---|
+| AutoShift deployments | ConfigMaps labelled `autoshift.io/cluster-labels`; namespace `policies-<release>` |
+| Components, sync/health, version | ArgoCD `Application`s labelled `app: <release>-policies` |
+| Gating label per component | `Placement.spec.predicates[].requiredClusterSelector` |
+| Which components read a label | the same predicates, inverted — note this is *consumption*, so `gitlab` appears under `odf` because it requires ODF, not because it provides it |
+| Clusters per component | `PlacementDecision` labelled `cluster.open-cluster-management.io/placement` |
+| Policy ↔ Placement | `PlacementBinding` |
+| Compliance | `Policy.status.status[]` |
+| Config layers | ConfigMaps labelled `autoshift.io/cluster-default-configs`, `…/cluster-set-configs`, `…/cluster-configs` |
+| Resolved config | ConfigMaps labelled `autoshift.io/rendered-config-map` |
+| Actual labels, health, version | `ManagedCluster` |
+
+There is **no backend service**. Every read goes through the console's Kubernetes proxy via
+`useK8sWatchResource`, so the viewer's own RBAC applies and no privileged service account exists.
+A user who cannot list `ManagedCluster` simply sees less.
+
+### Feature grouping (cluster sets)
+
+Labels group into features using the cluster's own vocabulary — every Placement gating label plus
+every component name. A label joins the **shortest** known name that prefixes it, so
+`cert-manager-ca` and `cert-manager-ingress-cert` land under `cert-manager`, while
+`node-feature-discovery` and `node-maintenance` stay apart. Group names are never guessed from
+string prefixes; doing that produced overlapping junk groups (`cert` beside `cert-manager`).
+
+A label matching no known name falls back to its leading token, absorbing same-token groups so
+`acm-source` sits with `acm-observability` rather than beside it.
+
+### Stack grouping (stacks page)
+
+Only the *names* are editorial. Resolution order:
+
+1. `ConfigMap/autoshift-console-catalog` in the `autoshift-console` namespace — admin-editable in-cluster
+2. `DEFAULT_STACKS` in `src/lib/catalog.ts`, versioned with the plugin image
+3. anything unnamed **classifies itself** by the API groups its policies manage, so a new AutoShift
+   policy lands somewhere sensible with no plugin rebuild
+4. only a component managing nothing but generic resources reaches **Other**
+
+The page also offers **By tier** (stable / certified / community), read from each Application's
+`policies/<tier>/<name>` source path — fully derived, no catalog involved.
+
+Thematic names cannot be derived: policy categories carry two distinct values across ~180 policies,
+component names leave most components as singletons, and namespaces are mostly the shared
+`openshift-operators`. That is why a curated list still exists at all.
+
+To regroup without rebuilding:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autoshift-console-catalog
+  namespace: autoshift-console
+data:
+  stacks: |
+    stacks:
+      - id: ai
+        name: AI & Accelerators
+        components:
+          - openshift-ai
+          - gpu-operator
+```
 
 ## Development
 
-### Option 1: Local
+Requires Node.js and a cluster login. The repo vendors Yarn 4, so no global install is needed.
 
-In one terminal window, run:
+The plugin is built once per OpenShift release (see `ocp-targets.json`), because the console
+supplies react, react-router and react-i18next as shared singletons and those versions change
+between releases — most sharply at 4.22, where the console moved React 17 to 18. A bundle built
+for the wrong release loads and then fails silently: the pod serves assets, the console skips the
+plugin, and every route 404s with nothing in any server-side log.
 
-1. `yarn install`
-2. `yarn run start`
-
-In another terminal window, run:
-
-1. `oc login` (requires [oc](https://console.redhat.com/openshift/downloads) and an [OpenShift cluster](https://console.redhat.com/openshift/create))
-2. `yarn run start-console` (requires [Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io))
-
-This will run the OpenShift console in a container connected to the cluster
-you've logged into. The plugin HTTP server runs on port 9001 with CORS enabled.
-Navigate to <http://localhost:9000/example> to see the running plugin.
-
-#### Running start-console with Apple silicon and podman
-
-If you are using podman on a Mac with Apple silicon, `yarn run start-console`
-might fail since it runs an amd64 image. You can workaround the problem with
-[qemu-user-static](https://github.com/multiarch/qemu-user-static) by running
-these commands:
+Pick a target before installing. It rewrites the pins in `package.json` and installs that target's
+committed lockfile (`yarn.lock.<minor>` — plain `yarn.lock` is generated and git-ignored):
 
 ```bash
-podman machine ssh
-sudo -i
-rpm-ostree install qemu-user-static
-systemctl reboot
+./scripts/set-ocp-target.sh 4.22
+node .yarn/releases/yarn-4.17.1.cjs install --immutable
+node .yarn/releases/yarn-4.17.1.cjs start        # plugin dev server on :9001
+
+oc login <your-autoshift-hub>
+node .yarn/releases/yarn-4.17.1.cjs start-console # console container on :9000, pinned to 4.22
 ```
 
-### Option 2: Docker + VSCode Remote Container
+Open <http://localhost:9000/autoshift>. `window.SERVER_FLAGS.consolePlugins` should list
+`autoshift-console`.
 
-Make sure the
-[Remote Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-extension is installed. This method uses Docker Compose where one container is
-the OpenShift console and the second container is the plugin. It requires that
-you have access to an existing OpenShift cluster. After the initial build, the
-cached containers will help you start developing in seconds.
-
-1. Create a `dev.env` file inside the `.devcontainer` folder with the correct values for your cluster:
+The plugin only has data on a cluster running an AutoShift instance. Elsewhere it renders an empty
+state explaining why rather than a blank page.
 
 ```bash
-OC_PLUGIN_NAME=console-plugin-template
-OC_URL=https://api.example.com:6443
-OC_USER=kubeadmin
-OC_PASS=<password>
+node .yarn/releases/yarn-4.17.1.cjs lint    # eslint + stylelint, mandatory before commit
+node .yarn/releases/yarn-4.17.1.cjs test    # jest unit tests
+node .yarn/releases/yarn-4.17.1.cjs build   # production bundle
+node .yarn/releases/yarn-4.17.1.cjs i18n    # re-extract locales after changing strings
 ```
 
-2. `(Ctrl+Shift+P) => Remote Containers: Open Folder in Container...`
-3. `yarn run start`
-4. Navigate to <http://localhost:9000/example>
+After changing a dependency, refresh the lockfile for **every** target, or CI's `--immutable`
+install will fail on the ones you missed:
 
-## Docker image
-
-Before you can deploy your plugin on a cluster, you must build an image and
-push it to an image registry.
-
-1. Build the image:
-
-   ```sh
-   docker build -t quay.io/my-repository/my-plugin:latest .
-   ```
-
-2. Run the image:
-
-   ```sh
-   docker run -it --rm -d -p 9001:80 quay.io/my-repository/my-plugin:latest
-   ```
-
-3. Push the image:
-
-   ```sh
-   docker push quay.io/my-repository/my-plugin:latest
-   ```
-
-NOTE: If you have a Mac with Apple silicon, you will need to add the flag
-`--platform=linux/amd64` when building the image to target the correct platform
-to run in-cluster.
-
-## Deployment on cluster
-
-A [Helm](https://helm.sh) chart is available to deploy the plugin to an OpenShift environment.
-
-The following Helm parameters are required:
-
-`plugin.image`: The location of the image containing the plugin that was previously pushed
-
-Additional parameters can be specified if desired. Consult the chart [values](charts/openshift-console-plugin/values.yaml) file for the full set of supported parameters.
-
-### Installing the Helm Chart
-
-Install the chart using the name of the plugin as the Helm release name into a new namespace or an existing namespace as specified by the `plugin_console-plugin-template` parameter and providing the location of the image within the `plugin.image` parameter by using the following command:
-
-```shell
-helm upgrade -i  my-plugin charts/openshift-console-plugin -n my-namespace --create-namespace --set plugin.image=my-plugin-image-location
+```bash
+for t in 4.22; do
+  ./scripts/set-ocp-target.sh $t
+  node .yarn/releases/yarn-4.17.1.cjs install
+  cp yarn.lock "yarn.lock.$t"
+done
 ```
 
-NOTE: When deploying on OpenShift 4.10, it is recommended to add the parameter `--set plugin.securityContext.enabled=false` which will omit configurations related to Pod Security.
+Unit tests cover the analytical core — provenance derivation, label merge and drift, catalog
+resolution — in `src/lib/*.spec.ts`. That logic mirrors AutoShift's own merge semantics, so it is
+the part most worth pinning down.
 
-NOTE: When defining i18n namespace, adhere `plugin__<name-of-the-plugin>` format. The name of the plugin should be extracted from the `consolePlugin` declaration within the [package.json](package.json) file.
+## Deployment
 
-## i18n
+Production deployment is handled by AutoShift itself, via the community policy
+`policies/community/autoshift-console/` in the
+[autoshiftv2](https://github.com/auto-shift/autoshiftv2) repo. Enable it with:
 
-The plugin template demonstrates how you can translate messages in with [react-i18next](https://react.i18next.com/). The i18n namespace must match
-the name of the `ConsolePlugin` resource with the `plugin__` prefix to avoid
-naming conflicts. For example, the plugin template uses the
-`plugin__console-plugin-template` namespace. You can use the `useTranslation` hook
-with this namespace as follows:
-
-```tsx
-const Header: React.FC = () => {
-  const { t } = useTranslation('plugin__console-plugin-template');
-  return <h1>{t('Hello, World!')}</h1>;
-};
+```yaml
+hubClusterSets:
+  hub:
+    config:
+      autoshiftConsole:
+        image: 'quay.io/autoshift/autoshift-console-plugin:latest'
+        replicas: 2
+    labels:
+      autoshift-console: 'true'
 ```
 
-For labels in `console-extensions.json`, you can use the format
-`%plugin__console-plugin-template~My Label%`. Console will replace the value with
-the message for the current language from the `plugin__console-plugin-template`
-namespace. For example:
+For a standalone install (local testing, or a cluster not managed by AutoShift), the generic Helm
+chart under `charts/openshift-console-plugin` still works:
 
-```json
-  {
-    "type": "console.navigation/section",
-    "properties": {
-      "id": "admin-demo-section",
-      "perspective": "admin",
-      "name": "%plugin__console-plugin-template~Plugin Template%"
-    }
-  }
+```bash
+podman build -t quay.io/autoshift/autoshift-console-plugin:latest .   # --platform=linux/amd64 on Apple Silicon
+podman push quay.io/autoshift/autoshift-console-plugin:latest
+
+helm upgrade -i autoshift-console charts/openshift-console-plugin \
+  -n autoshift-console --create-namespace \
+  --set plugin.image=quay.io/autoshift/autoshift-console-plugin:latest
 ```
 
-Running `yarn i18n` updates the JSON files in the `locales` folder of the
-plugin template when adding or changing messages.
+## CI and image security
 
-## Linting
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yaml` | PR / push to main | gitleaks, lint, unit tests, build, then builds the image and fails on **fixable HIGH/CRITICAL** (image and filesystem). Pushes nothing. |
+| `release.yaml` | tag `v*.*.*` | Builds, scans as a gate, generates an SPDX SBOM, pushes to Quay, then cosign-signs and attests **by digest**. Scanning happens before registry login, so a failing scan cannot publish. |
+| `scheduled-rebuild.yaml` | Mondays 06:00 UTC | Rebuilds the latest release tag's source against **freshly resolved** UBI base digests, scans, publishes `<tag>-<date>` and `latest`, signs. A second job scans the already-published image (including unfixed CVEs) and opens or closes a tracking issue. |
 
-This project adds prettier, eslint, and stylelint. Linting can be run with
-`yarn run lint`.
+Base images are pinned by digest so a scan describes exactly what ships; Dependabot moves the pin,
+and the weekly rebuild overrides it via `--build-arg` to pick up Red Hat's patched bases without
+waiting for a commit.
 
-The stylelint config disallows defining colors since these cause problems with dark
-mode. Use [PatternFly semantic tokens](https://www.patternfly.org/tokens/all-patternfly-tokens)
-for colors instead.
+**On "zero vulnerabilities":** the gate enforces zero *fixable* HIGH/CRITICAL, and the image
+currently meets it — a local scan of the full build reported **0 fixable at every severity**.
 
-The stylelint config also disallows naked element selectors like `table` and
-`.pf-` or `.co-` prefixed classes. This prevents plugins from accidentally
-overwriting default console styles, breaking the layout of existing pages. The
-best practice is to prefix your CSS class names with your plugin name to avoid
-conflicts. Please don't disable these rules without understanding how they can
-break console styles!
+It does carry a standing tail of *unfixed* CVEs inherited from the UBI base (17 HIGH, 327 MEDIUM,
+403 LOW at the time of writing), none of which have an upstream fix yet. Those cannot be actioned
+by rebuilding, so they do not gate and do not open an issue; the weekly job reports them as a
+summary table instead. A CVE disclosed after release moves the count without anything changing, so
+the real measure is time-to-patch, which the weekly rebuild bounds to seven days.
 
-## References
+The base carries far more packages than a static file server needs (the image is ~339 MB). A
+minimal base would cut the raw count sharply at the cost of leaving Red Hat's patch stream, which
+is why it has not been done.
 
-- [Console Plugin SDK README](https://github.com/openshift/console/tree/main/frontend/packages/console-dynamic-plugin-sdk)
-- [Customization Plugin Example](https://github.com/spadgett/console-customization-plugin)
-- [Dynamic Plugin Enhancement Proposal](https://github.com/openshift/enhancements/blob/master/enhancements/console/dynamic-plugins.md)
+`ubi9/nodejs-22` and `ubi9/nginx-126` are official Red Hat UBI images (`vendor: Red Hat, Inc.`).
+That is not the same as Red Hat *Certified* — certification is a Partner Connect process for the
+resulting image, not a property inherited from the base.
+
+Build args are named `PLUGIN_VERSION` / `PLUGIN_REVISION`: podman/buildah silently clobbers a build
+arg called `VERSION` (verified on 5.4.1), which made the image label claim a version it was not
+built at.
+
+## Scope
+
+Read-only by design. No writes, no GitOps PR write-back, no values simulator, and no
+Thanos/ACM Observability metrics — the plugin depends on nothing beyond the Kubernetes API.
+
+Actual installed operator CSVs are **not** shown: they are not available on the hub. Channel and
+version columns are labelled as *desired*, sourced from the `<component>-channel` /
+`<component>-version` labels.
+
+## License
+
+Apache 2.0. Custom console plugin code is not supported by Red Hat — only Cooperative community
+support is available.

@@ -1,20 +1,101 @@
 [
   {
+    "type": "console.navigation/section",
+    "properties": {
+      "id": "autoshift",
+      "perspective": "admin",
+      "name": "%plugin__autoshift-console~AutoShift%",
+      "insertAfter": "compute"
+    }
+  },
+  {
     "type": "console.page/route",
     "properties": {
       "exact": true,
-      "path": "/example",
-      "component": { "$codeRef": "ExamplePage" }
+      "path": "/autoshift",
+      "component": {
+        "$codeRef": "FleetPage.default"
+      }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/autoshift/fleet",
+      "component": {
+        "$codeRef": "FleetPage.default"
+      }
     }
   },
   {
     "type": "console.navigation/href",
     "properties": {
-      "id": "example",
-      "name": "%plugin__console-plugin-template~Plugin example%",
-      "href": "/example",
+      "id": "autoshift-fleet",
+      "name": "%plugin__autoshift-console~Fleet%",
+      "href": "/autoshift/fleet",
       "perspective": "admin",
-      "section": "home"
+      "section": "autoshift"
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/autoshift/cluster-sets",
+      "component": {
+        "$codeRef": "ClusterSetsPage.default"
+      }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "autoshift-cluster-sets",
+      "name": "%plugin__autoshift-console~Cluster Sets%",
+      "href": "/autoshift/cluster-sets",
+      "perspective": "admin",
+      "section": "autoshift"
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/autoshift/clusters",
+      "component": {
+        "$codeRef": "ClustersPage.default"
+      }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "autoshift-clusters",
+      "name": "%plugin__autoshift-console~Clusters%",
+      "href": "/autoshift/clusters",
+      "perspective": "admin",
+      "section": "autoshift"
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/autoshift/stacks",
+      "component": {
+        "$codeRef": "StacksPage.default"
+      }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "autoshift-stacks",
+      "name": "%plugin__autoshift-console~Stacks%",
+      "href": "/autoshift/stacks",
+      "perspective": "admin",
+      "section": "autoshift"
     }
   }
 ]

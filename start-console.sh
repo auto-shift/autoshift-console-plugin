@@ -2,7 +2,10 @@
 
 set -euo pipefail
 
-CONSOLE_IMAGE=${CONSOLE_IMAGE:="quay.io/openshift/origin-console:latest"}
+# Pinned to the OpenShift release this plugin targets (see ocp-targets.json), NOT :latest.
+# :latest tracks master, which supplies a different React / react-router than 4.22 — so a plugin
+# that is broken on a real 4.22 cluster can still look perfectly fine locally.
+CONSOLE_IMAGE=${CONSOLE_IMAGE:="quay.io/openshift/origin-console:4.22"}
 CONSOLE_PORT=${CONSOLE_PORT:=9000}
 CONSOLE_IMAGE_PLATFORM=${CONSOLE_IMAGE_PLATFORM:="linux/amd64"}
 

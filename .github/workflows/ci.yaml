@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  targets:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: read
+        run: |
+          echo "matrix=$(jq -c '{ocp: (.targets | keys)}' ocp-targets.json)" >> "$GITHUB_OUTPUT"
+
+  # Every OpenShift target is built. A pin that satisfies one release but not another is exactly
+  # the failure this catches — the SDK validator rejects a bundle that does not match the
+  # console's shared-module contract.
+  lint-and-test:
+    needs: targets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.targets.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # The repo vendors its own Yarn release (yarnPath in .yarnrc.yml), so there is nothing to
+      # install and no chance of CI using a different package manager version than a developer.
+      - name: Select OpenShift target
+        run: ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
+
+      # --immutable is safe: set-ocp-target.sh installs yarn.lock.<target>, which is committed.
+      - name: Install dependencies
+        run: node "$(awk '/yarnPath:/{print $2}' .yarnrc.yml)" install --immutable
+
+      - name: Lint
+        run: node "$(awk '/yarnPath:/{print $2}' .yarnrc.yml)" lint
+
+      - name: Unit tests
+        run: node "$(awk '/yarnPath:/{print $2}' .yarnrc.yml)" test
+
+      # AutoShift gates deployment on config.autoshiftConsole.minOpenShiftVersion; this keeps the
+      # plugin's own declared floor visible so the two can be reconciled.
+      - name: Report declared OpenShift floor
+        run: echo "target ${{ matrix.ocp }} declares floor $(./check-min-version.sh)"
+
+      # The live-cluster fixture is git-ignored, so model.live.spec.ts self-skips here. It only
+      # runs for a developer who has captured a snapshot with ./capture-fixture.sh.
+      - name: Build
+        run: node "$(awk '/yarnPath:/{print $2}' .yarnrc.yml)" build
+
+  # Builds the real image and fails the PR on any fixable HIGH/CRITICAL. Nothing is pushed.
+  image-scan:
+    needs: targets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.targets.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Select OpenShift target
+        run: ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: autoshift-console-plugin:ci-ocp${{ matrix.ocp }}
+          build-args: |
+            PLUGIN_VERSION=0.0.0-ci-ocp${{ matrix.ocp }}
+            PLUGIN_REVISION=${{ github.sha }}
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: autoshift-console-plugin:ci-ocp${{ matrix.ocp }}
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          # Unfixable CVEs cannot be actioned by rebuilding, so gating on them would block every
+          # PR until Red Hat ships a fix. They are still reported by the scheduled scan.
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+
+      - name: Scan filesystem for vulnerable dependencies
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
