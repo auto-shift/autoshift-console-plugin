@@ -102,7 +102,7 @@ jobs:
           $YARN install --immutable
           $YARN build
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: steps.tag.outputs.found == 'true'
 
       - name: Build against current bases

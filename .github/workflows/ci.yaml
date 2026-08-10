@@ -91,7 +91,7 @@ jobs:
       - name: Select OpenShift target
         run: ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Build image
         uses: docker/build-push-action@v6
