@@ -122,7 +122,7 @@ jobs:
 
       - name: Scan rebuilt image (gate)
         if: steps.tag.outputs.found == 'true'
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}:rebuild-ocp${{ matrix.ocp }}
           format: table
@@ -180,7 +180,7 @@ jobs:
       # (17 HIGH at the time of writing) and opening an issue for those every week would be noise
       # that trains people to ignore the label.
       - name: Scan published image (fixable)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}:ocp${{ matrix.ocp }}
           format: table
@@ -191,7 +191,7 @@ jobs:
           trivyignores: .trivyignore
 
       - name: Scan published image (full exposure)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}:ocp${{ matrix.ocp }}
           format: json
