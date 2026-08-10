@@ -15,6 +15,20 @@ updates:
       interval: weekly
     labels: [dependencies]
     open-pull-requests-limit: 10
+    # The console supplies these as shared singletons via module federation, so their versions are
+    # dictated by the OpenShift release being targeted — they are pinned in ocp-targets.json and
+    # applied by scripts/set-ocp-target.sh. A Dependabot bump here does not upgrade anything; it
+    # breaks the contract and the SDK validator fails the build ("Console provides shared module X
+    # but plugin uses Y"). Change the OpenShift target instead.
+    ignore:
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-router
+      - dependency-name: react-i18next
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-dom'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk-webpack'
     groups:
       patternfly:
         patterns: ['@patternfly/*']

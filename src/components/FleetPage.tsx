@@ -11,18 +11,25 @@ import {
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import type { FC, ReactNode } from 'react';
 import type { ClusterView, Stack } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
+import { withDeployment } from './common/useSelectedDeployment';
 
 import './autoshift.css';
 
-const Tile: FC<{ value: ReactNode; label: string; tone?: 'warn' | 'danger' }> = ({
-  value,
-  label,
-  tone,
-}) => (
-  <Card isCompact className="autoshift-console__tile">
+/**
+ * A headline figure. Given `to`, the whole tile becomes a link to the page that lists whatever it
+ * counts — a number on a dashboard invites a click, and having nothing happen is a dead end.
+ */
+const Tile: FC<{
+  value: ReactNode;
+  label: string;
+  tone?: 'warn' | 'danger';
+  to?: string;
+}> = ({ value, label, tone, to }) => {
+  const body = (
     <CardBody>
       <div
         className={
@@ -37,8 +44,24 @@ const Tile: FC<{ value: ReactNode; label: string; tone?: 'warn' | 'danger' }> = 
       </div>
       <div className="autoshift-console__tile-label">{label}</div>
     </CardBody>
-  </Card>
-);
+  );
+
+  if (!to) {
+    return (
+      <Card isCompact className="autoshift-console__tile">
+        {body}
+      </Card>
+    );
+  }
+
+  return (
+    <Card isCompact isClickable className="autoshift-console__tile">
+      <Link to={to} className="autoshift-console__tile-link">
+        {body}
+      </Link>
+    </Card>
+  );
+};
 
 type Coverage = 'all' | 'partial' | 'none';
 
@@ -92,19 +115,32 @@ const FleetPage: FC = () => {
           <>
             <Flex className="autoshift-console__tiles">
               <FlexItem>
-                <Tile value={model.clusters.length} label={t('Clusters')} />
+                <Tile
+                  value={model.clusters.length}
+                  label={t('Clusters')}
+                  to={withDeployment('/autoshift/clusters', deployment)}
+                />
               </FlexItem>
               <FlexItem>
-                <Tile value={model.clusterSets.length} label={t('Cluster sets')} />
+                <Tile
+                  value={model.clusterSets.length}
+                  label={t('Cluster sets')}
+                  to={withDeployment('/autoshift/cluster-sets', deployment)}
+                />
               </FlexItem>
               <FlexItem>
-                <Tile value={model.components.length} label={t('Components')} />
+                <Tile
+                  value={model.components.length}
+                  label={t('Components')}
+                  to={withDeployment('/autoshift/stacks', deployment)}
+                />
               </FlexItem>
               <FlexItem>
                 <Tile
                   value={driftCount}
                   label={t('Clusters with label drift')}
                   tone={driftCount > 0 ? 'warn' : undefined}
+                  to={withDeployment('/autoshift/clusters', deployment)}
                 />
               </FlexItem>
               <FlexItem>
@@ -112,8 +148,10 @@ const FleetPage: FC = () => {
                   value={nonCompliant}
                   label={t('Clusters non-compliant')}
                   tone={nonCompliant > 0 ? 'danger' : undefined}
+                  to={withDeployment('/autoshift/clusters', deployment)}
                 />
               </FlexItem>
+              {/* Not a link: the version is a fact about the deployment, not a list of anything. */}
               <FlexItem>
                 <Tile value={deployment.version ?? '—'} label={t('AutoShift version')} />
               </FlexItem>
@@ -182,7 +220,11 @@ const FleetPage: FC = () => {
                     <Tbody>
                       {attention.map((cluster) => (
                         <Tr key={cluster.name}>
-                          <Td dataLabel={t('Cluster')}>{cluster.name}</Td>
+                          <Td dataLabel={t('Cluster')}>
+                            <Link to={withDeployment('/autoshift/clusters', deployment)}>
+                              {cluster.name}
+                            </Link>
+                          </Td>
                           <Td dataLabel={t('Cluster set')}>{cluster.clusterSet ?? '—'}</Td>
                           <Td dataLabel={t('Reason')}>
                             {!cluster.available && (

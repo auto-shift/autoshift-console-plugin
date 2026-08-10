@@ -138,3 +138,17 @@
   margin-block-end: var(--pf-t--global--spacer--md);
 }
 
+
+/* A linked tile: the anchor fills the card so the whole area is clickable, and inherits colour
+ * so the figure does not turn link-blue and read as body text. */
+.autoshift-console__tile-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.autoshift-console__tile-link:hover,
+.autoshift-console__tile-link:focus {
+  color: inherit;
+  text-decoration: none;
+}
