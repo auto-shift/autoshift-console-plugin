@@ -1,0 +1,17 @@
+# The Dockerfile does `ADD . /usr/src/app`, so anything not excluded here enters the build context.
+# CI builds from a clean checkout, but a local `podman build` would otherwise sweep in node_modules
+# and — more importantly — fixtures/live/, which is a capture of a real cluster.
+node_modules
+dist
+.git
+.github
+fixtures/live
+*.tar.gz
+
+# Nothing here is needed to produce the bundle.
+integration-tests
+playwright-report
+test-results
+coverage
+docs
+*.md

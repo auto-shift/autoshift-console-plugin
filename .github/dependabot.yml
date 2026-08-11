@@ -29,6 +29,10 @@ updates:
       - dependency-name: '@types/react-dom'
       - dependency-name: '@openshift-console/dynamic-plugin-sdk'
       - dependency-name: '@openshift-console/dynamic-plugin-sdk-webpack'
+      # CI and the Dockerfile build stage both run Node 22; types describing a newer runtime would
+      # let code past the compiler that fails at runtime. Bump alongside the Node version, not apart.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       patternfly:
         patterns: ['@patternfly/*']

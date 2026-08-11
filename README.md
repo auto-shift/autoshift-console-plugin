@@ -107,8 +107,8 @@ between releases — most sharply at 4.22, where the console moved React 17 to 1
 for the wrong release loads and then fails silently: the pod serves assets, the console skips the
 plugin, and every route 404s with nothing in any server-side log.
 
-Pick a target before installing. It rewrites the pins in `package.json` and installs that target's
-committed lockfile (`yarn.lock.<minor>` — plain `yarn.lock` is generated and git-ignored):
+Pick a target before installing — it rewrites the shared-module pins and the declared `pluginAPI`
+range in `package.json`:
 
 ```bash
 ./scripts/set-ocp-target.sh 4.22
@@ -132,16 +132,11 @@ node .yarn/releases/yarn-4.17.1.cjs build   # production bundle
 node .yarn/releases/yarn-4.17.1.cjs i18n    # re-extract locales after changing strings
 ```
 
-After changing a dependency, refresh the lockfile for **every** target, or CI's `--immutable`
-install will fail on the ones you missed:
-
-```bash
-for t in 4.22; do
-  ./scripts/set-ocp-target.sh $t
-  node .yarn/releases/yarn-4.17.1.cjs install
-  cp yarn.lock "yarn.lock.$t"
-done
-```
+`yarn.lock` is committed, so Dependabot maintains it and CI's `--immutable` install means
+something. That holds only while there is **one** target: two targets need two pinned dependency
+trees, and Dependabot updates `package.json` + `yarn.lock` and nothing else, so a second lockfile
+would silently go stale and fail every build. `ocp-targets.json` records the choice that has to be
+made if 4.23 is added.
 
 Unit tests cover the analytical core — provenance derivation, label merge and drift, catalog
 resolution — in `src/lib/*.spec.ts`. That logic mirrors AutoShift's own merge semantics, so it is
