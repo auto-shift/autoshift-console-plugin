@@ -27,7 +27,7 @@
     "@patternfly/react-core": "^6.6.0",
     "@patternfly/react-icons": "^6.6.0",
     "@patternfly/react-table": "^6.6.0",
-    "@playwright/browser-chromium": "~1.60.0",
+    "@playwright/browser-chromium": "~1.62.1",
     "@playwright/test": "~1.60.0",
     "@swc/core": "^1.15.47",
     "@swc/jest": "^0.2.39",

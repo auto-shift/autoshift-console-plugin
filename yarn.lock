@@ -2005,12 +2005,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/browser-chromium@npm:~1.60.0":
-  version: 1.60.0
-  resolution: "@playwright/browser-chromium@npm:1.60.0"
+"@playwright/browser-chromium@npm:~1.62.1":
+  version: 1.62.1
+  resolution: "@playwright/browser-chromium@npm:1.62.1"
   dependencies:
-    playwright-core: "npm:1.60.0"
-  checksum: 10c0/4ce75036da5679bf8da762b0bf95400278a6a2be6cead3be5055729c31c646dbd7597ba29d2e6bfff6313010937f0517ac5e7dc97a92d9793f7156d520997a0e
+    playwright-core: "npm:1.62.1"
+  checksum: 10c0/c9f50e25eee00a1561537d8922aeb3988955745186d03fdc1e298588e8dfbbc3c55192b15951dbc8bb8207ccb7908f4460adf741fcd55fa874e3545112d605ac
   languageName: node
   linkType: hard
 
@@ -3602,7 +3602,7 @@ __metadata:
     "@patternfly/react-core": "npm:^6.6.0"
     "@patternfly/react-icons": "npm:^6.6.0"
     "@patternfly/react-table": "npm:^6.6.0"
-    "@playwright/browser-chromium": "npm:~1.60.0"
+    "@playwright/browser-chromium": "npm:~1.62.1"
     "@playwright/test": "npm:~1.60.0"
     "@swc/core": "npm:^1.15.47"
     "@swc/jest": "npm:^0.2.39"
@@ -8793,6 +8793,15 @@ __metadata:
   bin:
     playwright-core: cli.js
   checksum: 10c0/99ccd43923b6e9355e0723b7fe221e6326efd4687f8dafff951313662aea11db51f542a9c2122c704c445fb9baae1c9ec9fa6f895126bbddd9fe92313f6942c9
+  languageName: node
+  linkType: hard
+
+"playwright-core@npm:1.62.1":
+  version: 1.62.1
+  resolution: "playwright-core@npm:1.62.1"
+  bin:
+    playwright-core: cli.js
+  checksum: 10c0/a37d0f03bb73364cfd0eba704c4b3359b609c4779ae2649a88d8e2b3a29c7357dfcc58bdcf0cb68ddffdef7687abf78902c8356e89f189682c7e19be38e108f0
   languageName: node
   linkType: hard
 
