@@ -24,9 +24,9 @@
   "devDependencies": {
     "@openshift-console/dynamic-plugin-sdk": "4.22-latest",
     "@openshift-console/dynamic-plugin-sdk-webpack": "4.22-latest",
-    "@patternfly/react-core": "^6.6.0",
-    "@patternfly/react-icons": "^6.6.0",
-    "@patternfly/react-table": "^6.6.0",
+    "@patternfly/react-core": "^6.6.1",
+    "@patternfly/react-icons": "^6.6.1",
+    "@patternfly/react-table": "^6.6.1",
     "@playwright/browser-chromium": "~1.60.0",
     "@playwright/test": "~1.60.0",
     "@swc/core": "^1.15.47",
