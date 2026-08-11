@@ -731,7 +731,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/ansi@npm:^2.0.5, @inquirer/ansi@npm:^2.0.7":
+"@inquirer/ansi@npm:^2.0.7":
   version: 2.0.7
   resolution: "@inquirer/ansi@npm:2.0.7"
   checksum: 10c0/a574f97a899f0d9346fa26b528b3f4a9ba6dcb9172288efb6b4314d8486470ed53d2f538200f66a25b843c6e0cbf83688c6d5174a8dc6eca853b291b09609c5a
@@ -770,7 +770,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/core@npm:^11.1.10, @inquirer/core@npm:^11.2.1":
+"@inquirer/core@npm:^11.2.1":
   version: 11.2.1
   resolution: "@inquirer/core@npm:11.2.1"
   dependencies:
@@ -889,7 +889,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/prompts@npm:^8.4.3":
+"@inquirer/prompts@npm:^8.5.2":
   version: 8.5.2
   resolution: "@inquirer/prompts@npm:8.5.2"
   dependencies:
@@ -960,7 +960,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/type@npm:^4.0.5, @inquirer/type@npm:^4.0.7":
+"@inquirer/type@npm:^4.0.7":
   version: 4.0.7
   resolution: "@inquirer/type@npm:4.0.7"
   peerDependencies:
@@ -2155,7 +2155,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core@npm:^1.15.18, @swc/core@npm:^1.15.47":
+"@swc/core@npm:^1.15.18, @swc/core@npm:^1.15.41, @swc/core@npm:^1.15.47":
   version: 1.15.47
   resolution: "@swc/core@npm:1.15.47"
   dependencies:
@@ -3630,7 +3630,7 @@ __metadata:
     fork-ts-checker-webpack-plugin: "npm:^9.1.0"
     globals: "npm:^17.9.0"
     i18next: "npm:^25.8.18"
-    i18next-cli: "npm:1.50.3"
+    i18next-cli: "npm:1.67.8"
     jest: "npm:^30.4.2"
     jest-environment-jsdom: "npm:^30.4.1"
     jest-junit: "npm:^17.0.0"
@@ -6266,6 +6266,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"html-parse-stringify@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "html-parse-stringify@npm:4.0.1"
+  checksum: 10c0/8d7267acbc8b70a50096176e28ba491af89fb31613b6a062bce4b8201b2703fd652bedfbe0db6efe90145379c89524a3319b1b58b8c96a72779b0f49e4c2c180
+  languageName: node
+  linkType: hard
+
 "html-tags@npm:^5.1.0":
   version: 5.1.0
   resolution: "html-tags@npm:5.1.0"
@@ -6383,33 +6390,34 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-cli@npm:1.50.3":
-  version: 1.50.3
-  resolution: "i18next-cli@npm:1.50.3"
+"i18next-cli@npm:1.67.8":
+  version: 1.67.8
+  resolution: "i18next-cli@npm:1.67.8"
   dependencies:
     "@croct/json5-parser": "npm:^0.2.2"
-    "@swc/core": "npm:^1.15.18"
+    "@swc/core": "npm:^1.15.41"
     chokidar: "npm:^5.0.0"
     commander: "npm:^14.0.3"
     execa: "npm:^9.6.1"
     glob: "npm:^13.0.6"
-    i18next-resources-for-ts: "npm:^2.0.2"
-    inquirer: "npm:^13.3.2"
-    jiti: "npm:^2.6.1"
+    i18next: "npm:^26.3.1"
+    i18next-resources-for-ts: "npm:^2.1.0"
+    inquirer: "npm:^14.0.2"
+    jiti: "npm:^2.7.0"
     jsonc-parser: "npm:^3.3.1"
     magic-string: "npm:^0.30.21"
-    minimatch: "npm:^10.2.4"
-    ora: "npm:^9.3.0"
-    react: "npm:^19.2.4"
-    react-i18next: "npm:^16.5.8"
-    yaml: "npm:^2.8.2"
+    minimatch: "npm:^10.2.5"
+    ora: "npm:^9.4.0"
+    react: "npm:^19.2.7"
+    react-i18next: "npm:^17.0.8"
+    yaml: "npm:^2.9.0"
   bin:
     i18next-cli: dist/esm/cli.js
-  checksum: 10c0/8ec73370f5847873ce9395342cc14a9bf8b8ce5637a54fe37f67c13b8427cc67fb6e79449101b3bd6beffe29d7a1e77101c033c76b70909e5edc974b740b77bf
+  checksum: 10c0/329499e5d93408e7b443e47974da65102c8dcebfcd9130595209443851efb6147ef8c9e9d1d09f1419110bbcf684853aec93feb5187768502a144be0e24c904c
   languageName: node
   linkType: hard
 
-"i18next-resources-for-ts@npm:^2.0.2":
+"i18next-resources-for-ts@npm:^2.1.0":
   version: 2.1.0
   resolution: "i18next-resources-for-ts@npm:2.1.0"
   dependencies:
@@ -6434,6 +6442,18 @@ __metadata:
     typescript:
       optional: true
   checksum: 10c0/6ff601b52363c9c974ef293af4a6de04d9f76b4bf2ad9a56c8546235aaf19ff1a7c2109ddba3a73922d418e208ec5b688e5afb323eba6e27c75d629e93827ae1
+  languageName: node
+  linkType: hard
+
+"i18next@npm:^26.3.1":
+  version: 26.3.6
+  resolution: "i18next@npm:26.3.6"
+  peerDependencies:
+    typescript: ^5 || ^6 || ^7
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/5920ac8fb6b647a2bdd439d121de04e5297246e52c4d95d13f5faae0824fd45b2faeb66038bcd61fc62362daa815f9c32fb992d6faa3787607d1dfe768e9a8b1
   languageName: node
   linkType: hard
 
@@ -6561,23 +6581,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"inquirer@npm:^13.3.2":
-  version: 13.4.3
-  resolution: "inquirer@npm:13.4.3"
+"inquirer@npm:^14.0.2":
+  version: 14.0.2
+  resolution: "inquirer@npm:14.0.2"
   dependencies:
-    "@inquirer/ansi": "npm:^2.0.5"
-    "@inquirer/core": "npm:^11.1.10"
-    "@inquirer/prompts": "npm:^8.4.3"
-    "@inquirer/type": "npm:^4.0.5"
+    "@inquirer/ansi": "npm:^2.0.7"
+    "@inquirer/core": "npm:^11.2.1"
+    "@inquirer/prompts": "npm:^8.5.2"
+    "@inquirer/type": "npm:^4.0.7"
     mute-stream: "npm:^3.0.0"
     run-async: "npm:^4.0.6"
-    rxjs: "npm:^7.8.2"
   peerDependencies:
     "@types/node": ">=18"
   peerDependenciesMeta:
     "@types/node":
       optional: true
-  checksum: 10c0/dd3fce12b9af7269857a3f8dbcbaafe73b6a66978c233e84ea2a5ae8f2be27f9494c4172572fd39e7483d0ea04312a9cade2ef7fad799249462e84618030fff1
+  checksum: 10c0/31ec80b7d599dcb19568540d694865b1da116f701b75503a23ed38189d96fca70eb1fb6ccb1dbd994f6f79d407d51dc1a94d06dcef5370644ce736792414781b
   languageName: node
   linkType: hard
 
@@ -7586,7 +7605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jiti@npm:^2.6.1":
+"jiti@npm:^2.7.0":
   version: 2.7.0
   resolution: "jiti@npm:2.7.0"
   bin:
@@ -8101,7 +8120,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^10.2.2, minimatch@npm:^10.2.4, minimatch@npm:^9.0.3 || ^10.1.2":
+"minimatch@npm:^10.2.2, minimatch@npm:^10.2.5, minimatch@npm:^9.0.3 || ^10.1.2":
   version: 10.2.6
   resolution: "minimatch@npm:10.2.6"
   dependencies:
@@ -8527,7 +8546,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ora@npm:^9.3.0":
+"ora@npm:^9.4.0":
   version: 9.4.1
   resolution: "ora@npm:9.4.1"
   dependencies:
@@ -9123,17 +9142,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-i18next@npm:^16.5.8":
-  version: 16.6.6
-  resolution: "react-i18next@npm:16.6.6"
+"react-i18next@npm:^17.0.8":
+  version: 17.0.11
+  resolution: "react-i18next@npm:17.0.11"
   dependencies:
     "@babel/runtime": "npm:^7.29.2"
-    html-parse-stringify: "npm:^3.0.1"
+    html-parse-stringify: "npm:^4.0.1"
     use-sync-external-store: "npm:^1.6.0"
   peerDependencies:
-    i18next: ">= 25.10.9"
+    i18next: ">= 26.2.0"
     react: ">= 16.8.0"
-    typescript: ^5 || ^6
+    typescript: ^5 || ^6 || ^7
   peerDependenciesMeta:
     react-dom:
       optional: true
@@ -9141,7 +9160,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/7d6660d382a529d4dc56e7a7bbab59689ac0f435b3a18bba81d6bbf52c87b2a41fd5d1bffcf60b92b5e6e2a1ad9443949fcf16329d9c63d582316557199a7d32
+  checksum: 10c0/f49e83e377f56d8f6a198a00539925edbc77370b68a51ad8b1829b581abcd22dd57843118a8e541c2284f58899d8035d255c41e246cfc64e9c0ca42df071ed81
   languageName: node
   linkType: hard
 
@@ -9220,7 +9239,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^19.2.4":
+"react@npm:^19.2.7":
   version: 19.2.8
   resolution: "react@npm:19.2.8"
   checksum: 10c0/5f86bdb56426652fd6d989d30a6f2e603c057272c47c9ca3a3fbe190a3a39ee9ccce937d63cfc039717abed1b8891d6a499134bc35311acc07eafdacd86537cd
@@ -9513,15 +9532,6 @@ __metadata:
   dependencies:
     queue-microtask: "npm:^1.2.2"
   checksum: 10c0/200b5ab25b5b8b7113f9901bfe3afc347e19bb7475b267d55ad0eb86a62a46d77510cb0f232507c9e5d497ebda569a08a9867d0d14f57a82ad5564d991588b39
-  languageName: node
-  linkType: hard
-
-"rxjs@npm:^7.8.2":
-  version: 7.8.2
-  resolution: "rxjs@npm:7.8.2"
-  dependencies:
-    tslib: "npm:^2.1.0"
-  checksum: 10c0/1fcd33d2066ada98ba8f21fcbbcaee9f0b271de1d38dc7f4e256bfbc6ffcdde68c8bfb69093de7eeb46f24b1fb820620bf0223706cff26b4ab99a7ff7b2e2c45
   languageName: node
   linkType: hard
 
@@ -10624,7 +10634,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.0, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.7.0, tslib@npm:^2.8.1":
+"tslib@npm:^2.0.0, tslib@npm:^2.4.0, tslib@npm:^2.7.0, tslib@npm:^2.8.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
@@ -11479,7 +11489,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.8.2":
+"yaml@npm:^2.8.2, yaml@npm:^2.9.0":
   version: 2.9.0
   resolution: "yaml@npm:2.9.0"
   bin:
