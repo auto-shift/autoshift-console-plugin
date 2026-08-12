@@ -180,7 +180,15 @@ export interface FeatureView extends LabelFamily {
   /** The config subtree under configKey, flattened to dotted leaf paths. */
   config: { path: string; value: unknown }[];
   /** Components whose Placement gates on a label in this family. */
-  components: { name: string; clusters: number; syncStatus?: string; healthStatus?: string }[];
+  components: {
+    name: string;
+    /** Clusters the component's Placement currently selects, by name. */
+    clusters: string[];
+    syncStatus?: string;
+    healthStatus?: string;
+    /** The component's policies, so a feature can be traced through to ACM Governance. */
+    policies: string[];
+  }[];
 }
 
 export interface ClusterSetView {

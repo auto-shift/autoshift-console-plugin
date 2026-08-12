@@ -428,6 +428,7 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
     clusters: c.clusters,
     syncStatus: c.syncStatus,
     healthStatus: c.healthStatus,
+    policies: c.policies,
   }));
   clusterSets.forEach((set) => {
     set.features = buildFeatures(set.labels, set.config, featureInputs);

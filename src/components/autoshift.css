@@ -9,6 +9,21 @@
   font-size: var(--pf-t--global--font--size--sm);
 }
 
+/* Policy links stacked one per line: generated policy names are long and similar, and wrapping
+ * them inline makes it hard to tell where one ends and the next begins. */
+.autoshift-console__policy-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-t--global--spacer--xs);
+}
+
+/* Marks text that hides detail behind a tooltip, so it does not look like inert content. */
+.autoshift-console__has-tooltip {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+
 /* Provenance chain: the winning layer is emphasised, superseded layers struck through. */
 .autoshift-console__chain {
   display: inline-flex;

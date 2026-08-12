@@ -12,16 +12,22 @@ import {
   ToggleGroupItem,
   Split,
   SplitItem,
+  Tooltip,
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import type { FC } from 'react';
 import type { ClusterSetView, FeatureView } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
 import { formatValue, labelState } from '../lib/config';
+import { acmPolicyResultsUrl } from '../lib/acm';
 import { ArgoLabel } from './common/status';
 
 import './autoshift.css';
+
+/** Above this many clusters the names go into a tooltip rather than inline in the cell. */
+const INLINE_CLUSTER_LIMIT = 3;
 
 /** A label value rendered by meaning rather than by raw string. */
 const ValueLabel: FC<{ name: string; value?: string }> = ({ name, value }) => {
@@ -54,7 +60,10 @@ type DetailView = 'labels' | 'config' | 'consumers';
  * single table — rather than three stacked sections. Three tables at once gave no way to narrow
  * anything and made a feature like gitlab (24 labels) a long scroll.
  */
-const FeatureDetail: FC<{ feature: FeatureView }> = ({ feature }) => {
+const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
+  feature,
+  policyNamespace,
+}) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [view, setView] = useState<DetailView>('labels');
   const [filter, setFilter] = useState('');
@@ -203,19 +212,60 @@ const FeatureDetail: FC<{ feature: FeatureView }> = ({ feature }) => {
             <Table variant="compact" aria-label={t('Consumed by')}>
               <Thead>
                 <Tr>
-                  <Th width={50}>{t('Component')}</Th>
-                  <Th width={25}>{t('Sync')}</Th>
-                  <Th width={25}>{t('Clusters')}</Th>
+                  <Th width={25}>{t('Component')}</Th>
+                  <Th width={40}>{t('Policies')}</Th>
+                  <Th width={20}>{t('Sync')}</Th>
+                  <Th width={15}>{t('Clusters')}</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {consumerRows.map((component) => (
                   <Tr key={component.name}>
                     <Td dataLabel={t('Component')}>{component.name}</Td>
+                    {/* The component name is a policy DIRECTORY, and the sync badge beside it is
+                        Argo CD's — together they read as an Application and dead-end. The policies
+                        it actually delivers are what a reader wants next, so they are listed and
+                        linked straight into ACM Governance. */}
+                    {/* Plain links, not Labels. A blue chip is what a gating label looks like in
+                        the column beside this one, and a policy is not a label; nesting a Link
+                        inside a Label also fights the chip's own colours. This matches how the
+                        Compliance tab renders a policy name. */}
+                    <Td dataLabel={t('Policies')}>
+                      {component.policies.length === 0 ? (
+                        <span className="autoshift-console__muted">{t('none')}</span>
+                      ) : (
+                        <div className="autoshift-console__policy-list">
+                          {component.policies.map((policy) => (
+                            <Link
+                              key={policy}
+                              to={acmPolicyResultsUrl(policyNamespace, policy)}
+                              title={t('Open {{policy}} in ACM Governance', { policy })}
+                            >
+                              <code className="autoshift-console__path">{policy}</code>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </Td>
                     <Td dataLabel={t('Sync')}>
                       <ArgoLabel status={component.syncStatus} />
                     </Td>
-                    <Td dataLabel={t('Clusters')}>{component.clusters}</Td>
+                    {/* A bare count leaves the obvious next question unanswered. Few enough to
+                        read are listed outright; beyond that the count carries the full list in a
+                        tooltip, so a large fleet does not turn one cell into a wall of names. */}
+                    <Td dataLabel={t('Clusters')}>
+                      {component.clusters.length === 0 ? (
+                        <span className="autoshift-console__muted">{t('none')}</span>
+                      ) : component.clusters.length <= INLINE_CLUSTER_LIMIT ? (
+                        component.clusters.join(', ')
+                      ) : (
+                        <Tooltip content={component.clusters.join(', ')}>
+                          <span className="autoshift-console__has-tooltip" tabIndex={0}>
+                            {t('{{count}} clusters', { count: component.clusters.length })}
+                          </span>
+                        </Tooltip>
+                      )}
+                    </Td>
                   </Tr>
                 ))}
               </Tbody>
@@ -226,7 +276,11 @@ const FeatureDetail: FC<{ feature: FeatureView }> = ({ feature }) => {
   );
 };
 
-const FeatureRows: FC<{ feature: FeatureView; rowIndex: number }> = ({ feature, rowIndex }) => {
+const FeatureRows: FC<{ feature: FeatureView; rowIndex: number; policyNamespace: string }> = ({
+  feature,
+  rowIndex,
+  policyNamespace,
+}) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [expanded, setExpanded] = useState(false);
   const toggle = () => {
@@ -269,7 +323,7 @@ const FeatureRows: FC<{ feature: FeatureView; rowIndex: number }> = ({ feature, 
       {expanded && (
         <Tr isExpanded>
           <Td colSpan={6}>
-            <FeatureDetail feature={feature} />
+            <FeatureDetail feature={feature} policyNamespace={policyNamespace} />
           </Td>
         </Tr>
       )}
@@ -280,7 +334,8 @@ const FeatureRows: FC<{ feature: FeatureView; rowIndex: number }> = ({ feature, 
 const ClusterSetCard: FC<{
   set: ClusterSetView;
   clusterTypes: Map<string, string | undefined>;
-}> = ({ set, clusterTypes }) => {
+  policyNamespace: string;
+}> = ({ set, clusterTypes, policyNamespace }) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [filter, setFilter] = useState('');
 
@@ -357,7 +412,7 @@ const ClusterSetCard: FC<{
             </Thead>
             {features.map((feature, i) => (
               <Tbody key={feature.name}>
-                <FeatureRows feature={feature} rowIndex={i} />
+                <FeatureRows feature={feature} rowIndex={i} policyNamespace={policyNamespace} />
               </Tbody>
             ))}
           </Table>
@@ -388,7 +443,12 @@ const ClusterSetsPage: FC = () => {
         return (
           <>
             {model.clusterSets.map((set) => (
-              <ClusterSetCard key={set.name} set={set} clusterTypes={clusterTypes} />
+              <ClusterSetCard
+                key={set.name}
+                set={set}
+                clusterTypes={clusterTypes}
+                policyNamespace={model.deployment.policyNamespace}
+              />
             ))}
           </>
         );

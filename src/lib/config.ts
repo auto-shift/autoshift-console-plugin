@@ -365,6 +365,7 @@ export interface FeatureComponentInput {
   clusters: string[];
   syncStatus?: string;
   healthStatus?: string;
+  policies: string[];
 }
 
 /**
@@ -410,9 +411,10 @@ export const buildFeatures = (
       config: flatConfig,
       components: owned.map((c) => ({
         name: c.name,
-        clusters: c.clusters.length,
+        clusters: c.clusters,
         syncStatus: c.syncStatus,
         healthStatus: c.healthStatus,
+        policies: c.policies,
       })),
     };
   });

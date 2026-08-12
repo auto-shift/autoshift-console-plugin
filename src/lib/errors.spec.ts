@@ -56,4 +56,27 @@ describe('toFailure', () => {
     const failure = toFailure('Policies', { response: { status: 500 }, message: 'boom' });
     expect(failure?.forbidden).toBe(false);
   });
+
+  /*
+   * The console returns NoModelError for the window between "models loaded" and "this CRD group's
+   * model resolved", which every watch on an ACM or Argo CD group passes through on page load.
+   * Reporting it flashed a banner reading like a permissions failure, then cleared itself.
+   *
+   * Both shapes are covered because the constructor name does not survive minification in a
+   * production build, while the message literal does.
+   */
+  it.each([
+    ['constructor name', { name: 'NoModelError', message: 'Model does not exist' }],
+    ['minified, message only', { name: 't', message: 'Model does not exist' }],
+  ])('treats an unresolved model (%s) as still loading, not a failure', (_name, error) => {
+    expect(toFailure('Policies', error)).toBeUndefined();
+  });
+
+  it('still reports a real error whose message merely mentions a model', () => {
+    expect(toFailure('Policies', { message: 'Model does not exist yet, retrying' })).toEqual({
+      resource: 'Policies',
+      forbidden: false,
+      message: 'Model does not exist yet, retrying',
+    });
+  });
 });

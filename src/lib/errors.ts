@@ -19,6 +19,7 @@ interface MaybeHttpError {
   code?: number;
   reason?: string;
   message?: string;
+  name?: string;
   json?: { code?: number; reason?: string; message?: string };
 }
 
@@ -57,6 +58,31 @@ export const describeError = (error: unknown): string => {
   return e.json?.message ?? e.message ?? String(error);
 };
 
-/** Build a failure entry, or undefined when the watch succeeded. */
+/**
+ * True when the console has not resolved this resource's model yet.
+ *
+ * useK8sWatchResource returns `new NoModelError()` whenever the console's model list has loaded but
+ * the model for this particular API group has not — a normal window during API discovery, hit by
+ * every watch on a CRD group (policy.open-cluster-management.io, argoproj.io,
+ * cluster.open-cluster-management.io). Reporting it raises a banner that reads like a permissions
+ * failure and then disappears a moment later.
+ *
+ * Trade-off, deliberately taken: an API group that is genuinely absent produces this same error
+ * permanently, and is now silent. That case is already covered — the plugin only deploys to hubs,
+ * and PageFrame renders "No AutoShift deployment found" when discovery turns up nothing. A
+ * transient false alarm on every page load is the worse failure.
+ *
+ * NoModelError is not exported from the SDK, so instanceof is unavailable. Its name comes from
+ * `new.target.name`, which minification mangles in a production build, so the message literal is
+ * matched too — minifiers leave string literals alone.
+ */
+const isModelNotResolved = (error: unknown): boolean => {
+  const e = asError(error);
+  return e.name === 'NoModelError' || e.message === 'Model does not exist';
+};
+
+/** Build a failure entry, or undefined when the watch succeeded or is still resolving. */
 export const toFailure = (resource: string, error: unknown): WatchFailure | undefined =>
-  error ? { resource, forbidden: isForbidden(error), message: describeError(error) } : undefined;
+  error && !isModelNotResolved(error)
+    ? { resource, forbidden: isForbidden(error), message: describeError(error) }
+    : undefined;
