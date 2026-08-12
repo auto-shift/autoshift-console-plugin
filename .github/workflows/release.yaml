@@ -77,7 +77,7 @@ jobs:
 
       # Built and scanned BEFORE registry login, so a failing scan cannot publish.
       - name: Build image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
