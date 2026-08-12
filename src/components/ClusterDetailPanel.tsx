@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 import type { FC } from 'react';
 import type { ClusterView, LayerName } from '../types/autoshift';
 import { AUTO_STAMPED_LABELS, formatValue, shortLabel } from '../lib/config';
-import { AvailabilityLabel, ComplianceLabel, DriftLabel } from './common/status';
+import { AvailabilityLabel, ComplianceLabel } from './common/status';
 import { ComplianceDetail } from './common/ComplianceDetail';
 
 import './autoshift.css';
@@ -63,10 +63,12 @@ const ProvenanceChain: FC<{
   );
 };
 
-export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void }> = ({
-  cluster,
-  onClose,
-}) => {
+export const ClusterDetailPanel: FC<{
+  cluster: ClusterView;
+  /** Namespace the deployment's policies live in, for the ACM Governance deep links. */
+  policyNamespace: string;
+  onClose: () => void;
+}> = ({ cluster, policyNamespace, onClose }) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [activeTab, setActiveTab] = useState<string | number>('provenance');
   const [filter, setFilter] = useState('');
@@ -79,6 +81,24 @@ export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void 
     }
     return cluster.provenance.filter((p) => p.path.toLowerCase().includes(needle));
   }, [cluster.provenance, filter]);
+
+  // Built once per cluster and filtered separately, so typing in the filter does not re-derive the
+  // whole row set — a cluster set carries a few hundred labels.
+  const allLabelRows = useMemo(
+    () =>
+      Object.entries(cluster.actualLabels)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => ({ key, value, autoStamped: AUTO_STAMPED_LABELS.has(key) })),
+    [cluster.actualLabels],
+  );
+
+  const labelRows = useMemo(() => {
+    const needle = labelFilter.trim().toLowerCase();
+    if (!needle) {
+      return allLabelRows;
+    }
+    return allLabelRows.filter((r) => r.key.toLowerCase().includes(needle));
+  }, [allLabelRows, labelFilter]);
 
   const overridden = cluster.provenance.filter((p) => p.layers.length > 1).length;
 
@@ -109,7 +129,7 @@ export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void 
             <DescriptionListTerm>{t('OpenShift version')}</DescriptionListTerm>
             <DescriptionListDescription>
               {cluster.openshiftVersion ?? cluster.kubernetesVersion ?? '—'}
-              {cluster.versionDrift && (
+              {cluster.upgradePending && (
                 <Label color="orange" isCompact className="autoshift-console__inline-label">
                   {t('desired {{version}}', { version: cluster.desiredVersion })}
                 </Label>
@@ -124,8 +144,7 @@ export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void 
                 upText={t('Available')}
                 downText={t('Unavailable')}
               />{' '}
-              <ComplianceLabel counts={cluster.compliance} unknownText={t('No policies')} />{' '}
-              <DriftLabel count={cluster.labelDrift.length} inSyncText={t('Labels in sync')} />
+              <ComplianceLabel counts={cluster.compliance} unknownText={t('No policies')} />
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>
@@ -182,18 +201,7 @@ export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void 
                       <Td dataLabel={t('Layer chain')}>
                         <ProvenanceChain layers={p.layers} />
                       </Td>
-                      <Td dataLabel={t('Resolved')}>
-                        {formatValue(p.resolved)}
-                        {p.stale && (
-                          <Label
-                            color="orange"
-                            isCompact
-                            className="autoshift-console__inline-label"
-                          >
-                            {t('not yet applied')}
-                          </Label>
-                        )}
-                      </Td>
+                      <Td dataLabel={t('Resolved')}>{formatValue(p.resolved)}</Td>
                     </Tr>
                   ))}
                 </Tbody>
@@ -203,12 +211,7 @@ export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void 
 
           <Tab
             eventKey="labels"
-            title={
-              <TabTitleText>
-                {t('Labels')}
-                {cluster.labelDrift.length > 0 && ` (${String(cluster.labelDrift.length)})`}
-              </TabTitleText>
-            }
+            title={<TabTitleText>{t('Labels')}</TabTitleText>}
             aria-label={t('Labels')}
           >
             <SearchInput
@@ -222,55 +225,31 @@ export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void 
               }}
               className="autoshift-console__filter"
             />
+            {/* One value column, not desired-vs-actual: cluster-labels is a mustonlyhave enforce
+                policy, so the two agree except while it is mid-reconcile. Its compliance status is
+                on the Compliance tab and is the authoritative signal if they ever diverge. */}
             <Table variant="compact" aria-label={t('Labels')}>
               <Thead>
                 <Tr>
-                  <Th width={40}>{t('Label')}</Th>
-                  <Th width={25}>{t('Desired')}</Th>
-                  <Th width={25}>{t('Actual')}</Th>
-                  <Th width={10}>{t('State')}</Th>
+                  <Th width={50}>{t('Label')}</Th>
+                  <Th width={35}>{t('Value')}</Th>
+                  <Th width={15}>{t('Source')}</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {Array.from(
-                  new Set([
-                    ...Object.keys(cluster.desiredLabels),
-                    ...Object.keys(cluster.actualLabels),
-                  ]),
-                )
-                  .sort((a, b) => a.localeCompare(b))
-                  .filter((key) => key.toLowerCase().includes(labelFilter.trim().toLowerCase()))
-                  .map((key) => {
-                    const drift = cluster.labelDrift.find((d) => d.key === key);
-                    return (
-                      <Tr key={key}>
-                        <Td dataLabel={t('Label')}>
-                          <code className="autoshift-console__path">{shortLabel(key)}</code>
-                        </Td>
-                        <Td dataLabel={t('Desired')}>{cluster.desiredLabels[key] ?? '—'}</Td>
-                        <Td dataLabel={t('Actual')}>{cluster.actualLabels[key] ?? '—'}</Td>
-                        <Td dataLabel={t('State')}>
-                          {AUTO_STAMPED_LABELS.has(key) ? (
-                            <Label color="grey" isCompact>
-                              {t('auto-stamped')}
-                            </Label>
-                          ) : drift ? (
-                            <Label color="orange" isCompact>
-                              {drift.kind === 'missing'
-                                ? t('not stamped')
-                                : drift.kind === 'unexpected'
-                                  ? t('not desired')
-                                  : t('differs')}
-                            </Label>
-                          ) : (
-                            <Label color="green" isCompact>
-                              {t('in sync')}
-                            </Label>
-                          )}
-                        </Td>
-                      </Tr>
-                    );
-                  })}
+                {labelRows.map(({ key, value, autoStamped }) => (
+                  <Tr key={key}>
+                    <Td dataLabel={t('Label')}>
+                      <code className="autoshift-console__path">{shortLabel(key)}</code>
+                    </Td>
+                    <Td dataLabel={t('Value')}>{value}</Td>
+                    <Td dataLabel={t('Source')}>
+                      <Label color={autoStamped ? 'grey' : 'blue'} isCompact>
+                        {autoStamped ? t('auto-stamped') : t('values')}
+                      </Label>
+                    </Td>
+                  </Tr>
+                ))}
               </Tbody>
             </Table>
           </Tab>
@@ -286,7 +265,11 @@ export const ClusterDetailPanel: FC<{ cluster: ClusterView; onClose: () => void 
             aria-label={t('Compliance')}
           >
             {/* Every row is this cluster, so the cluster column would repeat one value. */}
-            <ComplianceDetail checks={cluster.checks} showCluster={false} />
+            <ComplianceDetail
+              checks={cluster.checks}
+              policyNamespace={policyNamespace}
+              showCluster={false}
+            />
           </Tab>
         </Tabs>
       </DrawerPanelBody>

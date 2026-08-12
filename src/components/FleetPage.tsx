@@ -99,7 +99,7 @@ const CoverageCell: FC<{ coverage: Coverage }> = ({ coverage }) => {
 };
 
 const needsAttention = (c: ClusterView): boolean =>
-  !c.available || c.labelDrift.length > 0 || c.compliance.nonCompliant > 0 || c.versionDrift;
+  !c.available || c.compliance.nonCompliant > 0 || c.upgradePending;
 
 const FleetPage: FC = () => {
   const { t } = useTranslation('plugin__autoshift-console');
@@ -108,7 +108,7 @@ const FleetPage: FC = () => {
     <PageFrame title={t('AutoShift fleet')}>
       {(model, deployment) => {
         const attention = model.clusters.filter(needsAttention);
-        const driftCount = model.clusters.filter((c) => c.labelDrift.length > 0).length;
+        const unavailable = model.clusters.filter((c) => !c.available).length;
         const nonCompliant = model.clusters.filter((c) => c.compliance.nonCompliant > 0).length;
 
         return (
@@ -137,9 +137,9 @@ const FleetPage: FC = () => {
               </FlexItem>
               <FlexItem>
                 <Tile
-                  value={driftCount}
-                  label={t('Clusters with label drift')}
-                  tone={driftCount > 0 ? 'warn' : undefined}
+                  value={unavailable}
+                  label={t('Clusters unreachable')}
+                  tone={unavailable > 0 ? 'warn' : undefined}
                   to={withDeployment('/autoshift/clusters', deployment)}
                 />
               </FlexItem>
@@ -239,14 +239,7 @@ const FleetPage: FC = () => {
                                 })}
                               </Label>
                             )}{' '}
-                            {cluster.labelDrift.length > 0 && (
-                              <Label isCompact color="orange">
-                                {t('{{count}} labels drifted', {
-                                  count: cluster.labelDrift.length,
-                                })}
-                              </Label>
-                            )}{' '}
-                            {cluster.versionDrift && (
+                            {cluster.upgradePending && (
                               <Label isCompact color="orange">
                                 {t('version {{actual}}, desired {{desired}}', {
                                   actual: cluster.openshiftVersion,

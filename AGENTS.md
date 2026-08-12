@@ -135,11 +135,20 @@ Current config has `strict: true` and enforces:
     "id": "my-nav-item",
     "name": "%plugin__autoshift-console~My Page%",
     "href": "/my-page",
-    "perspective": "admin",
-    "section": "home"
+    "perspective": "acm",
+    "section": "autoshift"
   }
 }
 ```
+
+`perspective` is **`acm`**, not `admin`. That is the Fleet management perspective, declared by the
+MCE console plugin (`console.perspective`, id `acm`); ACM and MCE tag their own nav with it and this
+plugin joins the same way. Every nav item must use it — `plugin-metadata.spec.ts` fails otherwise,
+because a single entry left on `admin` lands in a different perspective from its siblings and leaves
+a hole in the AutoShift section rather than producing an obvious error.
+
+`console.page/route` takes no `perspective`: routes are global, so `/autoshift/*` resolves from any
+perspective. Do not add one.
 
 ### Updating Plugin Name
 When instantiating from template, update:

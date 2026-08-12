@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { buildFleetModel } from './model';
 import { groupByTier } from './catalog';
+import { AUTO_STAMPED_LABELS } from './config';
 import type {
   ApplicationResource,
   ConfigMapResource,
@@ -213,21 +214,35 @@ describeLive('buildFleetModel against a live hub snapshot', () => {
     expect((other?.components ?? []).every((c) => c.apiGroups.length === 0)).toBe(true);
   });
 
-  it('does not report auto-stamped labels as drift', () => {
-    const local = model.clusters.find((c) => c.name === 'local-cluster');
-    const keys = (local?.labelDrift ?? []).map((d) => d.key);
-    expect(keys).not.toContain('autoshift.io/owning-namespace');
-    expect(keys).not.toContain('autoshift.io/owning-deployment');
-    expect(keys).not.toContain('autoshift.io/cluster-type');
-    // They are still stamped on the cluster, just not treated as a discrepancy.
-    expect(local?.actualLabels['autoshift.io/owning-namespace']).toBe('policies-autoshift');
-  });
+  /*
+   * This is why the plugin shows no label drift.
+   *
+   * cluster-labels is a mustonlyhave + enforce policy, so on a healthy hub the stamped labels
+   * equal the desired labels, always. A client-side desired-vs-actual diff could therefore only
+   * ever report a transient mid-reconcile state or a bug in this plugin's own merge — never a
+   * genuine configuration problem. The policy's own compliance status is the real signal, and it
+   * is already shown on the Compliance tab.
+   *
+   * If this test starts failing, the enforcement assumption has changed and the decision to drop
+   * drift needs revisiting. Do not weaken the assertion.
+   */
+  it('has desired labels already reconciled onto every ManagedCluster', () => {
+    model.clusters.forEach((cluster) => {
+      Object.entries(cluster.desiredLabels).forEach(([key, value]) => {
+        expect([cluster.name, key, cluster.actualLabels[key]]).toEqual([cluster.name, key, value]);
+      });
 
-  it('treats the delete sentinel as intentionally absent, not as missing drift', () => {
+      // The only stamped labels absent from the values files are the ones AutoShift stamps itself.
+      const extra = Object.keys(cluster.actualLabels)
+        .filter((k) => !Object.hasOwn(cluster.desiredLabels, k))
+        .filter((k) => !AUTO_STAMPED_LABELS.has(k));
+      expect([cluster.name, extra]).toEqual([cluster.name, []]);
+    });
+
     const local = model.clusters.find((c) => c.name === 'local-cluster');
-    const missing = (local?.labelDrift ?? []).filter((d) => d.kind === 'missing');
-    // Every '_' label is dropped from desired, so none may show up as "not stamped".
-    expect(missing.map((d) => d.desired)).not.toContain('_');
+    expect(local?.actualLabels['autoshift.io/owning-namespace']).toBe('policies-autoshift');
+    // Delete-sentinel labels are dropped from desired, so they never read as unstamped.
+    expect(Object.values(local?.desiredLabels ?? {})).not.toContain('_');
   });
 
   it('carries per-policy verdicts so a failure can be traced to a cluster', () => {

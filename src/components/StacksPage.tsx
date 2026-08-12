@@ -44,11 +44,12 @@ const TierLabel: FC<{ tier?: string }> = ({ tier }) => {
 };
 
 /** One component row plus its expandable policy-verdict detail. */
-const ComponentRows: FC<{ component: Component; showTier: boolean; rowIndex: number }> = ({
-  component,
-  showTier,
-  rowIndex,
-}) => {
+const ComponentRows: FC<{
+  component: Component;
+  showTier: boolean;
+  rowIndex: number;
+  policyNamespace: string;
+}> = ({ component, showTier, rowIndex, policyNamespace }) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [expanded, setExpanded] = useState(false);
   const toggle = () => {
@@ -95,7 +96,7 @@ const ComponentRows: FC<{ component: Component; showTier: boolean; rowIndex: num
           <Td colSpan={span}>
             {/* Cluster column stays: a component spans clusters, and "which one is failing" is
                 the whole reason to open this row. */}
-            <ComplianceDetail checks={component.checks} />
+            <ComplianceDetail checks={component.checks} policyNamespace={policyNamespace} />
           </Td>
         </Tr>
       )}
@@ -103,7 +104,11 @@ const ComponentRows: FC<{ component: Component; showTier: boolean; rowIndex: num
   );
 };
 
-const StackTable: FC<{ stack: Stack; showTier: boolean }> = ({ stack, showTier }) => {
+const StackTable: FC<{ stack: Stack; showTier: boolean; policyNamespace: string }> = ({
+  stack,
+  showTier,
+  policyNamespace,
+}) => {
   const { t } = useTranslation('plugin__autoshift-console');
 
   return (
@@ -122,7 +127,12 @@ const StackTable: FC<{ stack: Stack; showTier: boolean }> = ({ stack, showTier }
       </Thead>
       {stack.components.map((component, i) => (
         <Tbody key={component.name}>
-          <ComponentRows component={component} showTier={showTier} rowIndex={i} />
+          <ComponentRows
+            component={component}
+            showTier={showTier}
+            rowIndex={i}
+            policyNamespace={policyNamespace}
+          />
         </Tbody>
       ))}
     </Table>
@@ -184,7 +194,11 @@ const StacksPage: FC = () => {
                   </Label>
                 </CardTitle>
                 <CardBody>
-                  <StackTable stack={stack} showTier={grouping === 'stack'} />
+                  <StackTable
+                    stack={stack}
+                    showTier={grouping === 'stack'}
+                    policyNamespace={model.deployment.policyNamespace}
+                  />
                 </CardBody>
               </Card>
             ))}

@@ -85,21 +85,6 @@ export interface Provenance {
   layers: LayerValue[];
   /** Value in the cluster's rendered-config, i.e. what AutoShift actually resolved. */
   resolved: unknown;
-  /**
-   * True when the winning layer disagrees with rendered-config. Usually means the rendered-config
-   * ConfigMap has not caught up with a values change yet.
-   */
-  stale: boolean;
-}
-
-export type DriftKind = 'missing' | 'unexpected' | 'mismatch';
-
-/** A difference between AutoShift's desired labels and what is stamped on the ManagedCluster. */
-export interface LabelDrift {
-  key: string;
-  desired?: string;
-  actual?: string;
-  kind: DriftKind;
 }
 
 /** One policy's verdict on one cluster — the granularity ACM actually reports. */
@@ -159,10 +144,15 @@ export interface ClusterView {
   kubernetesVersion?: string;
   /** Reported OpenShift version from the openshiftVersion ClusterClaim. */
   openshiftVersion?: string;
+  /** Merged clusterset + per-cluster labels from the ConfigMaps, i.e. what the values files ask for. */
   desiredLabels: Record<string, string>;
+  /** autoshift.io/* labels stamped on the ManagedCluster — the effective values. */
   actualLabels: Record<string, string>;
-  labelDrift: LabelDrift[];
-  versionDrift: boolean;
+  /**
+   * Desired OCP version differs from what the cluster reports. Unlike labels and config, this is
+   * not policy-reconciled on a short interval: an upgrade takes hours, so the gap is real state.
+   */
+  upgradePending: boolean;
   resolvedConfig: Record<string, unknown>;
   provenance: Provenance[];
   compliance: ComplianceCounts;

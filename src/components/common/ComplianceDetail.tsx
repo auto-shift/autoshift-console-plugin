@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { Content, Label, SearchInput, ToggleGroup, ToggleGroupItem } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import type { FC } from 'react';
 import type { PolicyCheck } from '../../types/autoshift';
+import { acmPolicyResultsUrl } from '../../lib/acm';
 
 import '../autoshift.css';
 
@@ -39,9 +41,15 @@ const VerdictLabel: FC<{ compliant?: string }> = ({ compliant }) => {
  */
 export const ComplianceDetail: FC<{
   checks: PolicyCheck[];
+  /**
+   * Namespace the policies live in, for the deep link into ACM's Governance UI. Every policy in a
+   * given check set belongs to one AutoShift deployment, so it is a single value rather than a
+   * per-row field.
+   */
+  policyNamespace: string;
   /** Hide the cluster column where every row is the same cluster by construction. */
   showCluster?: boolean;
-}> = ({ checks, showCluster = true }) => {
+}> = ({ checks, policyNamespace, showCluster = true }) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [filter, setFilter] = useState('');
   const [only, setOnly] = useState<'problems' | 'all'>('problems');
@@ -118,8 +126,15 @@ export const ComplianceDetail: FC<{
           <Tbody>
             {rows.map((c) => (
               <Tr key={`${c.policy}/${c.cluster}`}>
+                {/* Deep link to ACM Governance. Both plugins live in the Fleet management
+                    perspective, so this is an in-app route change, not a page load. */}
                 <Td dataLabel={t('Policy')}>
-                  <code className="autoshift-console__path">{c.policy}</code>
+                  <Link
+                    to={acmPolicyResultsUrl(policyNamespace, c.policy)}
+                    title={t('Open {{policy}} in ACM Governance', { policy: c.policy })}
+                  >
+                    <code className="autoshift-console__path">{c.policy}</code>
+                  </Link>
                 </Td>
                 {showCluster && <Td dataLabel={t('Cluster')}>{c.cluster}</Td>}
                 <Td dataLabel={t('Verdict')}>

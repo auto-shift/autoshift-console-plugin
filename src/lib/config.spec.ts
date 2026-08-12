@@ -1,7 +1,6 @@
 import {
   DELETE_SENTINEL,
   buildProvenance,
-  computeLabelDrift,
   flatten,
   formatValue,
   groupLabelFamilies,
@@ -57,22 +56,19 @@ describe('buildProvenance', () => {
       ['cluster', 'gp2-csi', true],
     ]);
     expect(storageClass.resolved).toBe('gp2-csi');
-    expect(storageClass.stale).toBe(false);
   });
 
-  it('flags a setting whose winning layer disagrees with rendered-config', () => {
+  it('reports the value rendered-config actually resolved to', () => {
     const [retention] = buildProvenance(layers, {
       uwm: { storageClass: 'gp2-csi', retention: '12h' },
     }).filter((p) => p.path === 'uwm.retention');
 
-    expect(retention.stale).toBe(true);
     expect(retention.resolved).toBe('12h');
   });
 
-  it('emits policy-authored paths with no layers and never calls them stale', () => {
+  it('emits policy-authored paths with no layers', () => {
     const [authored] = buildProvenance([], { someField: 'set-by-policy' });
     expect(authored.layers).toEqual([]);
-    expect(authored.stale).toBe(false);
     expect(authored.resolved).toBe('set-by-policy');
   });
 });
@@ -91,44 +87,6 @@ describe('mergeDesiredLabels', () => {
         { 'autoshift.io/acs': DELETE_SENTINEL },
       ),
     ).toEqual({ 'autoshift.io/odf': 'true' });
-  });
-});
-
-describe('computeLabelDrift', () => {
-  it('reports a desired label that was never stamped', () => {
-    expect(computeLabelDrift({ 'autoshift.io/acs': 'true' }, {})).toEqual([
-      { key: 'autoshift.io/acs', desired: 'true', kind: 'missing' },
-    ]);
-  });
-
-  it('reports a stamped label that is no longer desired', () => {
-    expect(computeLabelDrift({}, { 'autoshift.io/odf': 'true' })).toEqual([
-      { key: 'autoshift.io/odf', actual: 'true', kind: 'unexpected' },
-    ]);
-  });
-
-  it('reports a value mismatch', () => {
-    expect(
-      computeLabelDrift({ 'autoshift.io/acs': 'true' }, { 'autoshift.io/acs': 'false' }),
-    ).toEqual([{ key: 'autoshift.io/acs', desired: 'true', actual: 'false', kind: 'mismatch' }]);
-  });
-
-  it('ignores labels AutoShift stamps itself rather than reading from the ConfigMaps', () => {
-    expect(
-      computeLabelDrift(
-        {},
-        {
-          'autoshift.io/cluster-type': 'hub',
-          'autoshift.io/owning-namespace': 'policies-autoshift',
-          'autoshift.io/owning-deployment': 'autoshift',
-        },
-      ),
-    ).toEqual([]);
-  });
-
-  it('reports nothing when desired and actual agree', () => {
-    const labels = { 'autoshift.io/acs': 'true', 'autoshift.io/odf': 'true' };
-    expect(computeLabelDrift(labels, labels)).toEqual([]);
   });
 });
 

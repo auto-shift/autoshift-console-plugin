@@ -3,7 +3,6 @@ import { AUTOSHIFT_LABEL_PREFIX } from '../k8s/models';
 import { LAYER_ORDER } from '../types/autoshift';
 import type {
   ConfigMapResource,
-  LabelDrift,
   FeatureView,
   LabelFamily,
   LayerName,
@@ -83,13 +82,6 @@ export const flatten = (obj: PlainObject, prefix = ''): Map<string, unknown> => 
   return out;
 };
 
-const sameValue = (a: unknown, b: unknown): boolean => {
-  if (a === b) {
-    return true;
-  }
-  return JSON.stringify(a) === JSON.stringify(b);
-};
-
 export interface ConfigLayerInput {
   layer: LayerName;
   /** Name of the object the layer came from, shown in the UI. */
@@ -134,17 +126,7 @@ export const buildProvenance = (
         wins: i === winnerIndex,
       }));
 
-      const resolvedValue = flatResolved.get(path);
-      const winning = winnerIndex >= 0 ? entries[winnerIndex].value : undefined;
-
-      return {
-        path,
-        layers: entries,
-        resolved: resolvedValue,
-        // Only meaningful when a layer defines the path at all; a path that exists solely in
-        // rendered-config is policy-authored, not values-authored, so it is never "stale".
-        stale: winnerIndex >= 0 && !sameValue(winning, resolvedValue),
-      };
+      return { path, layers: entries, resolved: flatResolved.get(path) };
     });
 };
 
@@ -184,50 +166,13 @@ export const autoshiftLabels = (labels: Record<string, string> = {}): Record<str
  *   owning-namespace   written by cluster-labels from whichever cluster-set.* ConfigMap matched
  *   owning-deployment  the same, with the policies- prefix stripped
  *
- * Comparing them against desired always reports drift, so they are surfaced as auto-stamped
- * instead. They are still shown — knowing which deployment owns a cluster is useful — but never
- * counted as a discrepancy.
+ * Marked in the labels view so their absence from the values files does not read as an anomaly.
  */
 export const AUTO_STAMPED_LABELS = new Set([
   `${AUTOSHIFT_LABEL_PREFIX}cluster-type`,
   `${AUTOSHIFT_LABEL_PREFIX}owning-namespace`,
   `${AUTOSHIFT_LABEL_PREFIX}owning-deployment`,
 ]);
-
-/** Compare desired autoshift.io/* labels against what is stamped on the ManagedCluster. */
-const DRIFT_EXEMPT = AUTO_STAMPED_LABELS;
-
-export const computeLabelDrift = (
-  desired: Record<string, string>,
-  actual: Record<string, string>,
-): LabelDrift[] => {
-  const keys = new Set([...Object.keys(desired), ...Object.keys(actual)]);
-  const drift: LabelDrift[] = [];
-
-  Array.from(keys)
-    .sort((a, b) => a.localeCompare(b))
-    .forEach((key) => {
-      if (DRIFT_EXEMPT.has(key)) {
-        return;
-      }
-      // Presence is checked with `in` rather than an undefined comparison: a Record index
-      // signature types every read as defined, so `desired[key] !== undefined` never narrows.
-      const hasDesired = Object.hasOwn(desired, key);
-      const hasActual = Object.hasOwn(actual, key);
-      const d = desired[key];
-      const a = actual[key];
-
-      if (hasDesired && !hasActual) {
-        drift.push({ key, desired: d, kind: 'missing' });
-      } else if (!hasDesired && hasActual) {
-        drift.push({ key, actual: a, kind: 'unexpected' });
-      } else if (d !== a) {
-        drift.push({ key, desired: d, actual: a, kind: 'mismatch' });
-      }
-    });
-
-  return drift;
-};
 
 /**
  * Group labels into features.

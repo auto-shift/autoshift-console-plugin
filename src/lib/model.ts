@@ -12,7 +12,6 @@ import {
   asStringMap,
   autoshiftLabels,
   buildProvenance,
-  computeLabelDrift,
   buildFeatures,
   lookupKey,
   managedApiGroups,
@@ -65,24 +64,52 @@ const addCompliance = (counts: ComplianceCounts, compliant: string | undefined):
  * names do not always contain the directory name (ansible-automation-platform emits policy-aap-*),
  * so tracking metadata is what actually links most components.
  */
-const policyBelongsToApp = (
-  policy: PolicyResource,
-  appName: string,
-  component: string,
-): boolean => {
+const trackedApp = (policy: PolicyResource): string | undefined => {
   const labels = policy.metadata?.labels ?? {};
-  const annotations = policy.metadata?.annotations ?? {};
+  const instance = labels['argocd.argoproj.io/instance'] ?? labels['app.kubernetes.io/instance'];
+  if (instance) {
+    return instance;
+  }
+  const trackingId = policy.metadata?.annotations?.['argocd.argoproj.io/tracking-id'];
+  return typeof trackingId === 'string' && trackingId.includes(':')
+    ? trackingId.slice(0, trackingId.indexOf(':'))
+    : undefined;
+};
 
-  if (
-    labels['argocd.argoproj.io/instance'] === appName ||
-    labels['app.kubernetes.io/instance'] === appName
-  ) {
-    return true;
-  }
-  const trackingId = annotations['argocd.argoproj.io/tracking-id'];
-  if (typeof trackingId === 'string' && trackingId.startsWith(`${appName}:`)) {
-    return true;
-  }
+/**
+ * Index policies by the Application that delivered them, in one pass.
+ *
+ * Matching per component instead would be components x policies string comparisons on every model
+ * rebuild, and the model rebuilds whenever ACM touches any policy status — which is constantly.
+ *
+ * `untracked` holds policies carrying no Argo CD tracking metadata at all; only those fall back to
+ * the name-prefix match, which is genuinely last-resort because AutoShift policy names do not
+ * always contain the directory name (ansible-automation-platform emits policy-aap-*).
+ */
+const indexPoliciesByApp = (
+  policies: PolicyResource[],
+): { byApp: Map<string, PolicyResource[]>; untracked: PolicyResource[] } => {
+  const byApp = new Map<string, PolicyResource[]>();
+  const untracked: PolicyResource[] = [];
+
+  policies.forEach((policy) => {
+    const app = trackedApp(policy);
+    if (app === undefined) {
+      untracked.push(policy);
+      return;
+    }
+    const existing = byApp.get(app);
+    if (existing) {
+      existing.push(policy);
+    } else {
+      byApp.set(app, [policy]);
+    }
+  });
+
+  return { byApp, untracked };
+};
+
+const matchesComponentName = (policy: PolicyResource, component: string): boolean => {
   const name = policy.metadata?.name ?? '';
   return name === `policy-${component}` || name.startsWith(`policy-${component}-`);
 };
@@ -264,8 +291,8 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
         openshiftVersion,
         desiredLabels: desired,
         actualLabels: actual,
-        labelDrift: computeLabelDrift(desired, actual),
-        versionDrift: !!desiredVersion && !!openshiftVersion && desiredVersion !== openshiftVersion,
+        upgradePending:
+          !!desiredVersion && !!openshiftVersion && desiredVersion !== openshiftVersion,
         resolvedConfig,
         provenance: buildProvenance(layers, resolvedConfig),
         compliance: complianceByCluster.get(name) ?? emptyCompliance(),
@@ -327,6 +354,8 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
     (placements ?? []).map((p) => [p.metadata?.name ?? '', p] as const),
   );
 
+  const policyIndex = indexPoliciesByApp(policies ?? []);
+
   const components: Component[] = (applications ?? [])
     .map((app) => {
       const applicationName = app.metadata?.name ?? '';
@@ -344,7 +373,9 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
           ? (nameWithoutPrefix(applicationName, `${release}-`) ?? applicationName)
           : applicationName);
 
-      const owned = (policies ?? []).filter((p) => policyBelongsToApp(p, applicationName, name));
+      const owned = (policyIndex.byApp.get(applicationName) ?? []).concat(
+        policyIndex.untracked.filter((p) => matchesComponentName(p, name)),
+      );
 
       const compliance = emptyCompliance();
       const componentChecks: PolicyCheck[] = [];
@@ -402,8 +433,15 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
     set.features = buildFeatures(set.labels, set.config, featureInputs);
   });
 
+  // Every policy Application tracks the same revision, so the first one that declares it is the
+  // deployment's version. Sourced here rather than in the deployment-list hook, which would need a
+  // cluster-wide Application watch to find it.
+  const version = (applications ?? [])
+    .map((a) => (a.spec?.sources?.[0] ?? a.spec?.source)?.targetRevision)
+    .find((v) => !!v);
+
   return {
-    deployment,
+    deployment: { ...deployment, version: deployment.version ?? version },
     clusters,
     clusterSets,
     components,

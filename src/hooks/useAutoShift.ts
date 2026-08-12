@@ -59,11 +59,10 @@ export const useAutoShiftDeployments = (): { deployments: Deployment[] } & Watch
     selector: existsSelector(SELECTOR_CLUSTER_LABELS),
   });
 
-  const [applications] = useWatch<ApplicationResource[]>({
-    groupVersionKind: ApplicationGVK,
-    isList: true,
-  });
-
+  // Deliberately no Application watch here. This hook runs on every AutoShift page, and an
+  // unselected cluster-wide Argo CD Application list is megabytes of status.resources on a real hub
+  // — fetched for a single targetRevision string. useFleetModel already watches this deployment's
+  // own Applications through a label selector and fills the version in from there.
   const deployments = useMemo<Deployment[]>(() => {
     const namespaces = new Set(
       (configMaps ?? []).map((cm) => cm.metadata?.namespace).filter((ns): ns is string => !!ns),
@@ -71,16 +70,11 @@ export const useAutoShiftDeployments = (): { deployments: Deployment[] } & Watch
 
     return Array.from(namespaces)
       .sort((a, b) => a.localeCompare(b))
-      .map((policyNamespace) => {
-        const release =
-          nameWithoutPrefix(policyNamespace, POLICY_NAMESPACE_PREFIX) ?? policyNamespace;
-        const app = (applications ?? []).find(
-          (a) => a.metadata?.labels?.app === `${release}-policies`,
-        );
-        const source = app?.spec?.sources?.[0] ?? app?.spec?.source;
-        return { release, policyNamespace, version: source?.targetRevision };
-      });
-  }, [configMaps, applications]);
+      .map((policyNamespace) => ({
+        release: nameWithoutPrefix(policyNamespace, POLICY_NAMESPACE_PREFIX) ?? policyNamespace,
+        policyNamespace,
+      }));
+  }, [configMaps]);
 
   const failures = [toFailure('cluster label ConfigMaps', error)].filter(
     (f): f is WatchFailure => f !== undefined,

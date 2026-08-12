@@ -3,9 +3,9 @@
     "type": "console.navigation/section",
     "properties": {
       "id": "autoshift",
-      "perspective": "admin",
+      "perspective": "acm",
       "name": "%plugin__autoshift-console~AutoShift%",
-      "insertAfter": "compute"
+      "insertAfter": "acm-governance"
     }
   },
   {
@@ -34,7 +34,7 @@
       "id": "autoshift-fleet",
       "name": "%plugin__autoshift-console~Fleet%",
       "href": "/autoshift/fleet",
-      "perspective": "admin",
+      "perspective": "acm",
       "section": "autoshift"
     }
   },
@@ -54,7 +54,7 @@
       "id": "autoshift-cluster-sets",
       "name": "%plugin__autoshift-console~Cluster Sets%",
       "href": "/autoshift/cluster-sets",
-      "perspective": "admin",
+      "perspective": "acm",
       "section": "autoshift"
     }
   },
@@ -74,7 +74,7 @@
       "id": "autoshift-clusters",
       "name": "%plugin__autoshift-console~Clusters%",
       "href": "/autoshift/clusters",
-      "perspective": "admin",
+      "perspective": "acm",
       "section": "autoshift"
     }
   },
@@ -94,7 +94,7 @@
       "id": "autoshift-stacks",
       "name": "%plugin__autoshift-console~Stacks%",
       "href": "/autoshift/stacks",
-      "perspective": "admin",
+      "perspective": "acm",
       "section": "autoshift"
     }
   }

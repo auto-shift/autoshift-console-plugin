@@ -146,7 +146,10 @@ export const PageFrame: FC<PageFrameProps> = ({ title, children }) => {
 
     // Partial data still renders. Showing what the user can see, clearly marked as incomplete,
     // beats refusing to show anything.
-    return children(model, selected);
+    //
+    // model.deployment, not `selected`: the model fills in the tracked revision from this
+    // deployment's own Applications, which the deployment-list hook no longer watches for.
+    return children(model, model.deployment);
   };
 
   return (

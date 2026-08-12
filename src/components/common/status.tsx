@@ -76,22 +76,6 @@ export const ArgoLabel: FC<{ status?: string }> = ({ status }) => {
   );
 };
 
-/** Drift count for a cluster: green at zero, orange otherwise. Drift is never an error state. */
-export const DriftLabel: FC<{ count: number; inSyncText: string }> = ({ count, inSyncText }) => {
-  if (count === 0) {
-    return (
-      <Label color="green" icon={<CheckCircleIcon />}>
-        {inSyncText}
-      </Label>
-    );
-  }
-  return (
-    <Label color="orange" icon={<ExclamationTriangleIcon />}>
-      {count}
-    </Label>
-  );
-};
-
 export const AvailabilityLabel: FC<{ available: boolean; upText: string; downText: string }> = ({
   available,
   upText,

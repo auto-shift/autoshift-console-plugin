@@ -86,7 +86,7 @@
     "name": "autoshift-console",
     "version": "0.0.1",
     "displayName": "AutoShift",
-    "description": "Fleet configuration, resolution provenance and drift for clusters managed by AutoShift.",
+    "description": "Fleet configuration, resolution provenance and policy compliance for clusters managed by AutoShift.",
     "exposedModules": {
       "FleetPage": "./components/FleetPage",
       "ClusterSetsPage": "./components/ClusterSetsPage",

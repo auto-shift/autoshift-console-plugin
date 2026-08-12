@@ -4,13 +4,14 @@ import {
   DrawerContent,
   DrawerContentBody,
   DrawerPanelContent,
+  Label,
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
 import type { FC } from 'react';
 import type { ClusterView } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
-import { AvailabilityLabel, ComplianceLabel, DriftLabel } from './common/status';
+import { AvailabilityLabel, ComplianceLabel } from './common/status';
 import { ClusterDetailPanel } from './ClusterDetailPanel';
 
 import './autoshift.css';
@@ -36,7 +37,6 @@ const ClustersPage: FC = () => {
                 <Th>{t('Type')}</Th>
                 <Th>{t('OpenShift')}</Th>
                 <Th>{t('Status')}</Th>
-                <Th>{t('Label drift')}</Th>
                 <Th>{t('Compliance')}</Th>
               </Tr>
             </Thead>
@@ -65,8 +65,16 @@ const ClustersPage: FC = () => {
                     {cluster.clusterType ?? '—'}
                     {cluster.selfManaged && ` · ${t('self-managed')}`}
                   </Td>
+                  {/* Desired-vs-actual is shown for the version and nowhere else: an upgrade takes
+                      hours, so the gap is real state. Labels and config are reconciled by an
+                      enforcing policy, so comparing them client-side only ever races it. */}
                   <Td dataLabel={t('OpenShift')}>
                     {cluster.openshiftVersion ?? cluster.kubernetesVersion ?? '—'}
+                    {cluster.upgradePending && (
+                      <Label color="orange" isCompact className="autoshift-console__inline-label">
+                        {t('→ {{version}}', { version: cluster.desiredVersion })}
+                      </Label>
+                    )}
                   </Td>
                   <Td dataLabel={t('Status')}>
                     <AvailabilityLabel
@@ -74,9 +82,6 @@ const ClustersPage: FC = () => {
                       upText={t('Available')}
                       downText={t('Unavailable')}
                     />
-                  </Td>
-                  <Td dataLabel={t('Label drift')}>
-                    <DriftLabel count={cluster.labelDrift.length} inSyncText={t('In sync')} />
                   </Td>
                   <Td dataLabel={t('Compliance')}>
                     <ComplianceLabel counts={cluster.compliance} unknownText={t('No policies')} />
@@ -95,6 +100,7 @@ const ClustersPage: FC = () => {
                   {selected && (
                     <ClusterDetailPanel
                       cluster={selected}
+                      policyNamespace={deployment.policyNamespace}
                       onClose={() => {
                         setSelectedName(undefined);
                       }}
