@@ -108,7 +108,7 @@ jobs:
 
       - name: Build against current bases
         if: steps.tag.outputs.found == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
