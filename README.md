@@ -27,6 +27,11 @@ fleet default  →  cluster-set-config.<set>  →  managed-cluster-config.<clust
 
 with superseded values struck through.
 
+Every policy name in the UI — on a cluster's Compliance tab, and under a cluster set's *Consumed by*
+view — links to that policy's per-cluster results in **ACM Governance**
+(`/multicloud/governance/policies/details/<namespace>/<name>/results`). Both plugins live in the
+Fleet management perspective, so it is an in-app navigation rather than a page load.
+
 ### Why there is no config or label drift view
 
 AutoShift reconciles both continuously: `cluster-labels` is a `mustonlyhave` + `enforce` policy, and
@@ -34,13 +39,12 @@ AutoShift reconciles both continuously: `cluster-labels` is a `mustonlyhave` + `
 actual are therefore equal except while a policy is mid-reconcile, and when they are not, the policy
 reports itself NonCompliant — which the Compliance tab already shows.
 
-A client-side diff of the two could only ever surface that transient, or a bug in this plugin's own
-re-implementation of the merge. Measured against a live hub it was constantly empty, so it was
-removed. `model.live.spec.ts` pins the invariant instead, so if enforcement semantics ever change
-the test fails rather than the UI quietly going wrong.
+A client-side diff of the two could only ever surface that transient, or a discrepancy in this
+plugin's own re-implementation of the merge. `model.live.spec.ts` pins the invariant, so if
+enforcement semantics ever change the test fails rather than the UI quietly going wrong.
 
-The one desired-vs-actual comparison kept is the **OpenShift version**: an upgrade takes hours, so
-that gap is real state rather than a race with a controller.
+The one desired-vs-actual comparison the plugin does make is the **OpenShift version**: an upgrade
+takes hours, so that gap is real state rather than a race with a controller.
 
 ## How it discovers data
 
