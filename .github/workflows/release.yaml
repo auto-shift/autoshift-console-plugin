@@ -47,7 +47,9 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.targets.outputs.matrix) }}
     permissions:
-      contents: read
+      # write, not read: the SBOM step attaches its output to the GitHub Release. Scoped to this
+      # job so the rest of the workflow keeps the read-only default set at the top of the file.
+      contents: write
       # cosign keyless signing: the OIDC token records which workflow produced the image.
       id-token: write
     steps:
@@ -98,6 +100,11 @@ jobs:
           ignore-unfixed: true
           trivyignores: .trivyignore.yaml
 
+      # Attaches the SBOM to the GitHub Release as well as generating it for the attestation below.
+      # One asset per target, named after the tag, so the matrix does not collide. Release assets
+      # rather than the workflow artifact because artifacts expire (90 days by default) and need a
+      # GitHub login to fetch; an SBOM has to outlive the release it describes and be reachable by
+      # anyone auditing it. The cosign attestation remains the tamper-evident copy.
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
