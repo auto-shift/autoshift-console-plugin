@@ -130,7 +130,7 @@ jobs:
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-          trivyignores: .trivyignore
+          trivyignores: .trivyignore.yaml
 
       - name: Log in to Quay
         if: steps.tag.outputs.found == 'true'
@@ -189,7 +189,7 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: '0'
-          trivyignores: .trivyignore
+          trivyignores: .trivyignore.yaml
 
       - name: Scan published image (full exposure)
         uses: aquasecurity/trivy-action@v0.36.0

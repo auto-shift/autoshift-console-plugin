@@ -1,0 +1,30 @@
+# Accepted vulnerabilities, reviewed and justified.
+#
+# YAML rather than the plain .trivyignore format on purpose: only this format supports expired_at,
+# and Trivy enforces it (pkg/result/ignore.go, IgnoreFindings.Prune drops an entry once the date
+# passes, so the finding fails the gate again). The plain format discards # comments entirely, so a
+# "revisit by" date written there is read by humans and nothing else — a suppression added once
+# would live forever, silently hiding a later regression of the same CVE.
+#
+# Every entry needs an id, a statement saying why it does not apply here, and an expired_at.
+# Unlike a comment, `statement` also reaches the JSON and SARIF output.
+#
+# Keep expired_at short. It is a review deadline, not an estimate of when the fix lands: the cost of
+# it expiring early is one red build, and the cost of it expiring late is a real CVE going unnoticed.
+#
+# The gate already runs with ignore-unfixed, so an unfixed CVE never reaches this file — there is
+# nothing to action until Red Hat ships a fix, and the weekly scan of the published image reports
+# those separately. This file is only for a FIXABLE HIGH/CRITICAL that genuinely does not apply.
+
+vulnerabilities:
+  - id: CVE-2026-11940
+    statement: >-
+      python3 and python3-libs, inherited from the ubi9/nginx-126 base image. CPython tarfile
+      extraction filter bypass: exploiting it requires running Python code that extracts an
+      attacker-controlled tarball. This image runs nginx serving pre-built static assets as UID
+      1001 and never executes Python, so there is no reachable path.
+
+      The fixed RPM (3.9.25-7.el9_8.3) shipped in RHSA-2026:54268 on 2026-08-12, but the base image
+      has not been rebuilt against it yet — the pinned digest and current :latest both still carry
+      3.9.25-7.el9_8.2. Remove this entry once Dependabot bumps the base digest past the rebuild.
+    expired_at: 2026-09-13

@@ -96,7 +96,7 @@ jobs:
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-          trivyignores: .trivyignore
+          trivyignores: .trivyignore.yaml
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0

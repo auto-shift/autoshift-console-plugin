@@ -126,7 +126,7 @@ jobs:
           # Unfixable CVEs cannot be actioned by rebuilding, so gating on them would block every
           # PR until Red Hat ships a fix. They are still reported by the scheduled scan.
           ignore-unfixed: true
-          trivyignores: .trivyignore
+          trivyignores: .trivyignore.yaml
 
       - name: Scan filesystem for vulnerable dependencies
         uses: aquasecurity/trivy-action@v0.36.0
@@ -137,4 +137,4 @@ jobs:
           exit-code: '1'
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-          trivyignores: .trivyignore
+          trivyignores: .trivyignore.yaml
