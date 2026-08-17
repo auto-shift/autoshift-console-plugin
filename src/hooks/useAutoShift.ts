@@ -2,8 +2,10 @@ import { useMemo } from 'react';
 import { useWatch } from './useWatch';
 import {
   ApplicationGVK,
+  CLUSTERSET_LABEL,
   ConfigMapGVK,
   ManagedClusterGVK,
+  PREFIX_CLUSTER_SET,
   POLICY_NAMESPACE_PREFIX,
   PlacementBindingGVK,
   PlacementDecisionGVK,
@@ -59,22 +61,54 @@ export const useAutoShiftDeployments = (): { deployments: Deployment[] } & Watch
     selector: existsSelector(SELECTOR_CLUSTER_LABELS),
   });
 
+  // Same watch key as the one useFleetModel opens, so the SDK serves both from one cluster-wide
+  // ManagedCluster list rather than two. It buys the per-deployment cluster count, which is what
+  // lets the fleet switcher say which fleet holds data before it is clicked.
+  const [allClusters, clustersLoaded, clustersError] = useWatch<ManagedClusterResource[]>({
+    groupVersionKind: ManagedClusterGVK,
+    isList: true,
+  });
+  // No count at all rather than a wrong one. A viewer without ManagedCluster RBAC would otherwise
+  // see every fleet labelled "0 clusters", which reads as a fact about the fleet.
+  const countable = clustersLoaded && !clustersError;
+
   // Deliberately no Application watch here. This hook runs on every AutoShift page, and an
   // unselected cluster-wide Argo CD Application list is megabytes of status.resources on a real hub
   // — fetched for a single targetRevision string. useFleetModel already watches this deployment's
-  // own Applications through a label selector and fills the version in from there.
+  // own Applications through a label selector and fills the tracking ref in from there.
   const deployments = useMemo<Deployment[]>(() => {
-    const namespaces = new Set(
-      (configMaps ?? []).map((cm) => cm.metadata?.namespace).filter((ns): ns is string => !!ns),
-    );
+    // Cluster sets per namespace, from the cluster-set.<name> ConfigMaps. Those names are how a
+    // deployment claims a cluster, so they are also how its clusters are counted.
+    const setsByNamespace = new Map<string, Set<string>>();
+    (configMaps ?? []).forEach((cm) => {
+      const ns = cm.metadata?.namespace;
+      if (!ns) {
+        return;
+      }
+      const sets = setsByNamespace.get(ns) ?? new Set<string>();
+      const setName = nameWithoutPrefix(cm.metadata?.name ?? '', PREFIX_CLUSTER_SET);
+      if (setName !== undefined) {
+        sets.add(setName);
+      }
+      setsByNamespace.set(ns, sets);
+    });
 
-    return Array.from(namespaces)
+    return Array.from(setsByNamespace.keys())
       .sort((a, b) => a.localeCompare(b))
-      .map((policyNamespace) => ({
-        release: nameWithoutPrefix(policyNamespace, POLICY_NAMESPACE_PREFIX) ?? policyNamespace,
-        policyNamespace,
-      }));
-  }, [configMaps]);
+      .map((policyNamespace) => {
+        const sets = setsByNamespace.get(policyNamespace) ?? new Set<string>();
+        return {
+          release: nameWithoutPrefix(policyNamespace, POLICY_NAMESPACE_PREFIX) ?? policyNamespace,
+          policyNamespace,
+          clusterCount: countable
+            ? (allClusters ?? []).filter((mc) => {
+                const set = mc.metadata?.labels?.[CLUSTERSET_LABEL];
+                return set !== undefined && sets.has(set);
+              }).length
+            : undefined,
+        };
+      });
+  }, [configMaps, allClusters, countable]);
 
   const failures = [toFailure('cluster label ConfigMaps', error)].filter(
     (f): f is WatchFailure => f !== undefined,

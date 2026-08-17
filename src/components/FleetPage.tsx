@@ -10,25 +10,32 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { ExclamationCircleIcon, ExclamationTriangleIcon } from '@patternfly/react-icons';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { FC, ReactNode } from 'react';
 import type { ClusterView, Stack } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
 import { withDeployment } from './common/useSelectedDeployment';
+import { shortRevision } from '../lib/config';
 
 import './autoshift.css';
 
 /**
  * A headline figure. Given `to`, the whole tile becomes a link to the page that lists whatever it
  * counts — a number on a dashboard invites a click, and having nothing happen is a dead end.
+ *
+ * A toned tile also gets a status icon. Colour alone puts the one figure that matters at the same
+ * reading weight as the healthy counts beside it for anyone who does not resolve red from grey.
  */
 const Tile: FC<{
   value: ReactNode;
   label: string;
   tone?: 'warn' | 'danger';
   to?: string;
-}> = ({ value, label, tone, to }) => {
+  /** Secondary line under the label, for context the figure alone cannot carry. */
+  hint?: ReactNode;
+}> = ({ value, label, tone, to, hint }) => {
   const body = (
     <CardBody>
       <div
@@ -40,9 +47,16 @@ const Tile: FC<{
               : 'autoshift-console__tile-value'
         }
       >
+        {tone === 'danger' && (
+          <ExclamationCircleIcon className="autoshift-console__tile-icon" aria-hidden />
+        )}
+        {tone === 'warn' && (
+          <ExclamationTriangleIcon className="autoshift-console__tile-icon" aria-hidden />
+        )}
         {value}
       </div>
       <div className="autoshift-console__tile-label">{label}</div>
+      {hint !== undefined && <div className="autoshift-console__subtle">{hint}</div>}
     </CardBody>
   );
 
@@ -151,9 +165,22 @@ const FleetPage: FC = () => {
                   to={withDeployment('/autoshift/clusters', deployment)}
                 />
               </FlexItem>
-              {/* Not a link: the version is a fact about the deployment, not a list of anything. */}
+              {/* Not a link: the ref is a fact about the deployment, not a list of anything.
+                  Labelled "Tracking ref" rather than "version" because that is what it is —
+                  targetRevision is a branch as often as a tag, and calling `main` a version
+                  implies a reproducible point in time that a moving branch does not have. The
+                  commit Argo CD resolved it to is the answer to "what is actually deployed", so
+                  it sits underneath. */}
               <FlexItem>
-                <Tile value={deployment.version ?? '—'} label={t('AutoShift version')} />
+                <Tile
+                  value={deployment.trackingRef ?? '—'}
+                  label={t('AutoShift tracking ref')}
+                  hint={
+                    deployment.revision
+                      ? t('at {{revision}}', { revision: shortRevision(deployment.revision) })
+                      : undefined
+                  }
+                />
               </FlexItem>
             </Flex>
 
@@ -234,7 +261,7 @@ const FleetPage: FC = () => {
                             )}{' '}
                             {cluster.compliance.nonCompliant > 0 && (
                               <Label isCompact color="red">
-                                {t('{{count}} policies non-compliant', {
+                                {t('{{count}} policy non-compliant', {
                                   count: cluster.compliance.nonCompliant,
                                 })}
                               </Label>

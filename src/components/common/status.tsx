@@ -54,8 +54,38 @@ export const ComplianceLabel: FC<{ counts: ComplianceCounts; unknownText: string
   );
 };
 
-/** ArgoCD sync/health strings mapped onto PatternFly label colours. */
-export const ArgoLabel: FC<{ status?: string }> = ({ status }) => {
+/**
+ * ArgoCD sync/health strings mapped onto PatternFly label colours.
+ *
+ * `placed` guards the vacuous case. A component whose Placement selects no cluster still reports
+ * Synced/Healthy — truthfully, since Argo CD reconciled the Policy object on the hub — but read in
+ * a fleet view that green badge claims something is working somewhere, when nothing is running at
+ * all. The Argo CD verdict is kept in the tooltip rather than thrown away.
+ */
+export const ArgoLabel: FC<{ status?: string; placed?: boolean }> = ({ status, placed = true }) => {
+  const { t } = useTranslation('plugin__autoshift-console');
+
+  if (!placed) {
+    return (
+      <Tooltip
+        content={
+          status
+            ? t(
+                'No cluster is selected by this component’s Placement. Argo CD reports {{status}}.',
+                {
+                  status,
+                },
+              )
+            : t('No cluster is selected by this component’s Placement.')
+        }
+      >
+        <Label color="grey" icon={<OutlinedQuestionCircleIcon />}>
+          {t('N/A')}
+        </Label>
+      </Tooltip>
+    );
+  }
+
   if (!status) {
     return <Label color="grey">—</Label>;
   }

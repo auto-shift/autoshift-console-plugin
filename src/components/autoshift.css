@@ -126,6 +126,13 @@
   color: var(--pf-t--global--icon--color--status--danger--default);
 }
 
+/* Sized down from the figure it sits beside: it qualifies the number, it is not the number. */
+.autoshift-console__tile-icon {
+  font-size: var(--pf-t--global--font--size--lg);
+  margin-inline-end: var(--pf-t--global--spacer--sm);
+  vertical-align: baseline;
+}
+
 .autoshift-console__tile-label {
   color: var(--pf-t--global--text--color--subtle);
   font-size: var(--pf-t--global--font--size--sm);

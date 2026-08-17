@@ -13,6 +13,7 @@ import type { ClusterView } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
 import { AvailabilityLabel, ComplianceLabel } from './common/status';
 import { ClusterDetailPanel } from './ClusterDetailPanel';
+import { shortRevision } from '../lib/config';
 
 import './autoshift.css';
 
@@ -29,11 +30,21 @@ const ClustersPage: FC = () => {
 
         const table = (
           <Table variant="compact" aria-label={t('Clusters')}>
+            {/* Headers that can truncate carry their own tooltip: "Cluster ..." with nothing to
+                hover is a column with no name at all. Fleet and tracking ref are separate columns
+                rather than two lines in one cell — they are different facts and sort differently. */}
             <Thead>
               <Tr>
                 <Th>{t('Name')}</Th>
-                <Th>{t('Cluster set')}</Th>
-                <Th>{t('AutoShift')}</Th>
+                <Th info={{ tooltip: t('ACM cluster set this cluster belongs to') }}>
+                  {t('Cluster set')}
+                </Th>
+                <Th info={{ tooltip: t('AutoShift deployment that manages this cluster') }}>
+                  {t('AutoShift')}
+                </Th>
+                <Th info={{ tooltip: t('Git ref or OCI version that deployment follows') }}>
+                  {t('Tracking ref')}
+                </Th>
                 <Th>{t('Type')}</Th>
                 <Th>{t('OpenShift')}</Th>
                 <Th>{t('Status')}</Th>
@@ -51,14 +62,20 @@ const ClustersPage: FC = () => {
                   }}
                 >
                   <Td dataLabel={t('Name')}>{cluster.name}</Td>
-                  {/* Which AutoShift release manages this cluster, from the stamped
-                      owning-deployment label, plus the git branch/tag or OCI version that
-                      deployment is tracking. */}
                   <Td dataLabel={t('Cluster set')}>{cluster.clusterSet ?? '—'}</Td>
+                  {/* Which AutoShift release manages this cluster, from the stamped
+                      owning-deployment label. */}
                   <Td dataLabel={t('AutoShift')}>
                     {cluster.owningDeployment ?? deployment.release}
-                    {deployment.version && (
-                      <div className="autoshift-console__subtle">{deployment.version}</div>
+                  </Td>
+                  {/* The ref that deployment follows, with the commit it resolved to underneath.
+                      A branch name alone does not say what is running. */}
+                  <Td dataLabel={t('Tracking ref')}>
+                    {deployment.trackingRef ?? '—'}
+                    {deployment.revision && (
+                      <div className="autoshift-console__subtle">
+                        {shortRevision(deployment.revision)}
+                      </div>
                     )}
                   </Td>
                   <Td dataLabel={t('Type')}>

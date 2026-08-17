@@ -38,7 +38,11 @@ const describeLive = hasFixture ? describe : describe.skip;
 
 describeLive('buildFleetModel against a live hub snapshot', () => {
   const model = buildFleetModel({
-    deployment: { release: 'autoshift', policyNamespace: 'policies-autoshift', version: 'main' },
+    deployment: {
+      release: 'autoshift',
+      policyNamespace: 'policies-autoshift',
+      trackingRef: 'main',
+    },
     labelConfigMaps: read<ConfigMapResource>('labelcms.json'),
     defaultConfigMaps: read<ConfigMapResource>('defaults.json'),
     setConfigMaps: read<ConfigMapResource>('setconfigs.json'),

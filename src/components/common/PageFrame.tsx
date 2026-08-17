@@ -159,10 +159,16 @@ export const PageFrame: FC<PageFrameProps> = ({ title, children }) => {
       {deployments.length > 1 && selected && (
         <PageSection>
           <ToggleGroup aria-label={t('AutoShift deployment')}>
+            {/* Each tab carries its cluster count. Without it, picking between two fleets means
+                clicking one to find out whether it holds anything. */}
             {deployments.map((d) => (
               <ToggleGroupItem
                 key={d.release}
-                text={d.version ? `${d.release} · ${d.version}` : d.release}
+                text={
+                  d.clusterCount === undefined
+                    ? d.release
+                    : `${d.release} · ${t('{{count}} cluster', { count: d.clusterCount })}`
+                }
                 buttonId={d.release}
                 isSelected={d.release === selected.release}
                 onChange={() => {

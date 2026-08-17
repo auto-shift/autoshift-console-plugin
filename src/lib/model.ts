@@ -434,15 +434,24 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
     set.features = buildFeatures(set.labels, set.config, featureInputs);
   });
 
-  // Every policy Application tracks the same revision, so the first one that declares it is the
-  // deployment's version. Sourced here rather than in the deployment-list hook, which would need a
+  // Every policy Application tracks the same ref, so the first one that declares it stands for the
+  // deployment. Sourced here rather than in the deployment-list hook, which would need a
   // cluster-wide Application watch to find it.
-  const version = (applications ?? [])
+  //
+  // Both halves are kept. targetRevision is what the fleet follows and is frequently a branch, so
+  // on its own it cannot answer "what is deployed"; status.sync.revision is the commit Argo CD
+  // resolved it to, which can.
+  const trackingRef = (applications ?? [])
     .map((a) => (a.spec?.sources?.[0] ?? a.spec?.source)?.targetRevision)
     .find((v) => !!v);
+  const revision = (applications ?? []).map((a) => a.status?.sync?.revision).find((v) => !!v);
 
   return {
-    deployment: { ...deployment, version: deployment.version ?? version },
+    deployment: {
+      ...deployment,
+      trackingRef: deployment.trackingRef ?? trackingRef,
+      revision: deployment.revision ?? revision,
+    },
     clusters,
     clusterSets,
     components,

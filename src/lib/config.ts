@@ -292,6 +292,78 @@ export const labelState = (name: string, value: string | undefined): 'on' | 'off
 };
 
 /**
+ * Which concern a label speaks to. Used to group a feature's labels rather than printing them in
+ * one alphabetical run, where `aap-channel` sits next to `aap-controller-replicas` and the reader
+ * has to sort the list themselves.
+ */
+export type LabelConcern = 'toggle' | 'source' | 'storage' | 'setting';
+
+/** Where the operator/chart comes from: catalog, channel, version, image. */
+const SOURCE_TOKENS =
+  /(^|[-_])(channel|source|version|subscription|catalog|image|repo|tag)([-_]|$)/;
+
+/** Persistence: size, class, retention. */
+const STORAGE_TOKENS = /(^|[-_])(storage|pvc|volume|size|capacity|retention)([-_]|$)/;
+
+export const labelConcern = (key: string, value: string | undefined): LabelConcern => {
+  if (labelState(key, value) !== 'value') {
+    return 'toggle';
+  }
+  if (SOURCE_TOKENS.test(key)) {
+    return 'source';
+  }
+  if (STORAGE_TOKENS.test(key)) {
+    return 'storage';
+  }
+  return 'setting';
+};
+
+/** Reading order for the concern groups: state first, then where it comes from, then how it is sized. */
+export const LABEL_CONCERN_ORDER: LabelConcern[] = ['toggle', 'source', 'storage', 'setting'];
+
+export interface LabelRow {
+  /** The label exactly as AutoShift writes it, e.g. "aap-file_storage_size". */
+  key: string;
+  value: string;
+  /** Human-facing name, e.g. "File storage size". */
+  display: string;
+  concern: LabelConcern;
+}
+
+/**
+ * Turn one label into a display row.
+ *
+ * Two things are normalised, neither of which changes the underlying label:
+ *
+ *   - the feature prefix is dropped, because the feature name is already the heading above
+ *   - a trailing `-disabled` is dropped, because `aap-hub-disabled: on` states the negative of what
+ *     it means. The value chip inverts alongside it (labelState already does this), so the pair
+ *     reads "Hub / off" instead of asking the reader to invert twice.
+ *
+ * Hyphens and underscores both become spaces: AutoShift's own keys mix the two within one feature
+ * (`aap-file_storage_size` beside `aap-file-storage_storage_class`), and that inconsistency is not
+ * information. The raw key is kept on the row so it stays copyable for editing values files.
+ */
+export const toLabelRow = (feature: string, key: string, value: string): LabelRow => {
+  let display = key === feature ? feature : (nameWithoutPrefix(key, `${feature}-`) ?? key);
+  if (display.endsWith('-disabled')) {
+    display = display.slice(0, -'-disabled'.length);
+  } else if (display === 'disabled') {
+    display = feature;
+  }
+  display = display.replace(/[-_]/g, ' ');
+  return {
+    key,
+    value,
+    display: display.charAt(0).toUpperCase() + display.slice(1),
+    concern: labelConcern(key, value),
+  };
+};
+
+const nameWithoutPrefix = (name: string, prefix: string): string | undefined =>
+  name.startsWith(prefix) ? name.slice(prefix.length) : undefined;
+
+/**
  * API groups that say nothing about what a component is *for*. Every AutoShift policy is wrapped
  * in policy.open-cluster-management.io and most install through operators.coreos.com, so counting
  * them would put everything in one bucket.
@@ -430,6 +502,19 @@ export const lookupKey = (map: Record<string, string>, key: string): string | un
 /** Strip the autoshift.io/ prefix for display. */
 export const shortLabel = (key: string): string =>
   key.startsWith(AUTOSHIFT_LABEL_PREFIX) ? key.slice(AUTOSHIFT_LABEL_PREFIX.length) : key;
+
+/**
+ * Shorten a resolved Argo CD revision for display.
+ *
+ * A git commit is abbreviated the way git itself does; anything else — an OCI digest, a chart
+ * version — is left alone, because truncating those loses the identifier rather than shortening it.
+ */
+export const shortRevision = (revision: string | undefined): string | undefined => {
+  if (!revision) {
+    return undefined;
+  }
+  return /^[0-9a-f]{40}$/.test(revision) ? revision.slice(0, 7) : revision;
+};
 
 /** Render an arbitrary config value for a table cell. */
 export const formatValue = (value: unknown): string => {

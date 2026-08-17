@@ -20,7 +20,8 @@ import { Link } from 'react-router';
 import type { FC } from 'react';
 import type { ClusterSetView, FeatureView } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
-import { formatValue, labelState } from '../lib/config';
+import { LABEL_CONCERN_ORDER, formatValue, labelState, toLabelRow } from '../lib/config';
+import type { LabelConcern } from '../lib/config';
 import { acmPolicyResultsUrl } from '../lib/acm';
 import { ArgoLabel } from './common/status';
 
@@ -69,13 +70,38 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
   const [filter, setFilter] = useState('');
   const needle = filter.trim().toLowerCase();
 
-  const labelRows = useMemo(() => {
-    const rows =
+  // Grouped by concern, not printed in one alphabetical run: an unfiltered list of a feature's
+  // labels reads like a ConfigMap dump, and the reader ends up sorting it themselves.
+  const labelGroups = useMemo(() => {
+    const raw =
       feature.value === undefined
         ? feature.settings
         : [{ key: feature.name, value: feature.value }, ...feature.settings];
-    return needle ? rows.filter((r) => r.key.toLowerCase().includes(needle)) : rows;
+    const rows = raw
+      .map((r) => toLabelRow(feature.name, r.key, r.value))
+      .filter(
+        (r) =>
+          !needle ||
+          r.key.toLowerCase().includes(needle) ||
+          r.display.toLowerCase().includes(needle),
+      );
+
+    return LABEL_CONCERN_ORDER.map((concern) => ({
+      concern,
+      rows: rows.filter((r) => r.concern === concern),
+    })).filter((g) => g.rows.length > 0);
   }, [feature, needle]);
+
+  const labelRowCount = labelGroups.reduce((n, g) => n + g.rows.length, 0);
+
+  const concernTitle = (concern: LabelConcern): string =>
+    concern === 'toggle'
+      ? t('State')
+      : concern === 'source'
+        ? t('Source and version')
+        : concern === 'storage'
+          ? t('Storage')
+          : t('Other settings');
 
   const configRows = useMemo(
     () =>
@@ -140,7 +166,7 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
       </div>
 
       {view === 'labels' &&
-        (labelRows.length === 0 ? (
+        (labelRowCount === 0 ? (
           empty(t('Nothing matched that filter.'))
         ) : (
           <Table variant="compact" aria-label={t('Labels')}>
@@ -150,18 +176,32 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
                 <Th width={30}>{t('Value')}</Th>
               </Tr>
             </Thead>
-            <Tbody>
-              {labelRows.map((row) => (
-                <Tr key={row.key}>
-                  <Td dataLabel={t('Label')}>
-                    <code className="autoshift-console__path">{row.key}</code>
-                  </Td>
-                  <Td dataLabel={t('Value')}>
-                    <ValueLabel name={row.key} value={row.value} />
-                  </Td>
+            {labelGroups.map((group) => (
+              <Tbody key={group.concern}>
+                <Tr>
+                  <Th colSpan={2} scope="colgroup" isSubheader>
+                    {concernTitle(group.concern)}
+                  </Th>
                 </Tr>
-              ))}
-            </Tbody>
+                {group.rows.map((row) => (
+                  <Tr key={row.key}>
+                    {/* The readable name leads; the raw key stays underneath because it is what
+                        someone editing a values file has to type. */}
+                    <Td dataLabel={t('Label')}>
+                      {row.display}
+                      <div className="autoshift-console__subtle">
+                        <code>{row.key}</code>
+                      </div>
+                    </Td>
+                    {/* labelState is given the RAW key: it is the trailing -disabled that tells it
+                        to invert, and the display name has had that stripped off. */}
+                    <Td dataLabel={t('Value')}>
+                      <ValueLabel name={row.key} value={row.value} />
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            ))}
           </Table>
         ))}
 
@@ -248,7 +288,10 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
                       )}
                     </Td>
                     <Td dataLabel={t('Sync')}>
-                      <ArgoLabel status={component.syncStatus} />
+                      <ArgoLabel
+                        status={component.syncStatus}
+                        placed={component.clusters.length > 0}
+                      />
                     </Td>
                     {/* A bare count leaves the obvious next question unanswered. Few enough to
                         read are listed outright; beyond that the count carries the full list in a
@@ -261,7 +304,7 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
                       ) : (
                         <Tooltip content={component.clusters.join(', ')}>
                           <span className="autoshift-console__has-tooltip" tabIndex={0}>
-                            {t('{{count}} clusters', { count: component.clusters.length })}
+                            {t('{{count}} cluster', { count: component.clusters.length })}
                           </span>
                         </Tooltip>
                       )}
@@ -308,7 +351,7 @@ const FeatureRows: FC<{ feature: FeatureView; rowIndex: number; policyNamespace:
             <span className="autoshift-console__muted">—</span>
           ) : (
             <Label isCompact color="blue">
-              {t('{{count}} settings', { count: feature.config.length })}
+              {t('{{count}} setting', { count: feature.config.length })}
             </Label>
           )}
         </Td>
@@ -362,10 +405,10 @@ const ClusterSetCard: FC<{
               {t('{{count}} on', { count: on })}
             </Label>{' '}
             <Label isCompact color="grey">
-              {t('{{count}} features', { count: set.features.length })}
+              {t('{{count}} feature', { count: set.features.length })}
             </Label>{' '}
             <Label isCompact color="blue">
-              {t('{{count}} clusters', { count: set.clusters.length })}
+              {t('{{count}} cluster', { count: set.clusters.length })}
             </Label>
           </SplitItem>
         </Split>
