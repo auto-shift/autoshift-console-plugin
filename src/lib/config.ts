@@ -461,9 +461,43 @@ export const buildFeatures = (
   // The cluster's own vocabulary for what a feature is called.
   const vocabulary = components.flatMap((c) => [c.name, ...c.gatingLabels.map(shortLabel)]);
 
-  return groupLabelFamilies(labels, vocabulary).map((family) => {
-    const memberKeys = new Set([family.name, ...family.settings.map((s) => s.key)]);
+  const families = groupLabelFamilies(labels, vocabulary);
 
+  /*
+   * Which feature a gating label belongs to.
+   *
+   * Membership cannot be "the cluster set declares this exact label": a component gates on
+   * autoshift.io/acm-observability, but a set that leaves observability at its policy default never
+   * writes that key, so the acm feature would show no consumers at all. What the set declares is
+   * the subset it overrides, not the vocabulary of the feature.
+   *
+   * So a declared label is claimed by the family that owns it, and anything else falls to the
+   * LONGEST feature name that prefixes it. Longest, not shortest, so acm-observability goes to an
+   * acm-observability feature when one exists and only falls back to acm when it does not — one
+   * owner either way, never both.
+   */
+  const claimed = new Map<string, string>();
+  families.forEach((family) => {
+    claimed.set(family.name, family.name);
+    family.settings.forEach((s) => claimed.set(s.key, family.name));
+  });
+
+  const featureFor = (gatingLabel: string): string | undefined => {
+    const key = shortLabel(gatingLabel);
+    const owner = claimed.get(key);
+    if (owner !== undefined) {
+      return owner;
+    }
+    let best: string | undefined;
+    families.forEach(({ name }) => {
+      if (key.startsWith(`${name}-`) && (best === undefined || name.length > best.length)) {
+        best = name;
+      }
+    });
+    return best;
+  };
+
+  return families.map((family) => {
     const configKey = configKeys.get(normaliseName(family.name));
     const subtree = configKey === undefined ? undefined : config[configKey];
     const flatConfig =
@@ -474,7 +508,7 @@ export const buildFeatures = (
           : [{ path: configKey ?? family.name, value: subtree }];
 
     const owned = components.filter((c) =>
-      c.gatingLabels.some((g) => memberKeys.has(shortLabel(g))),
+      c.gatingLabels.some((g) => featureFor(g) === family.name),
     );
 
     return {

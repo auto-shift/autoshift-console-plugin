@@ -1,5 +1,6 @@
 import {
   DELETE_SENTINEL,
+  buildFeatures,
   buildProvenance,
   flatten,
   formatValue,
@@ -237,5 +238,46 @@ describe('toLabelRow', () => {
     expect(toLabelRow('aap', 'aap-file-storage_storage_class', 'gp3').concern).toBe('storage');
     expect(toLabelRow('aap', 'aap-eda-disabled', 'true').concern).toBe('toggle');
     expect(toLabelRow('aap', 'aap-controller-replicas', '3').concern).toBe('setting');
+  });
+});
+
+describe('buildFeatures', () => {
+  const component = (name: string, gatingLabels: string[]) => ({
+    name,
+    gatingLabels,
+    clusters: [],
+    policies: [],
+  });
+
+  /*
+   * The bug this pins: a cluster set declares only the labels it OVERRIDES. A component gating on
+   * autoshift.io/acm-observability is still an acm component when the set leaves observability at
+   * its policy default, so requiring the set to declare that exact key left the acm feature
+   * reporting no consumers at all on a minimal profile.
+   */
+  it('joins a component whose gating label the set leaves at its default', () => {
+    const features = buildFeatures(
+      {
+        'autoshift.io/acm-channel': 'release-2.17',
+        'autoshift.io/acm-source': 'redhat-operators',
+      },
+      {},
+      [component('advanced-cluster-management', ['autoshift.io/acm-observability'])],
+    );
+
+    expect(features.find((f) => f.name === 'acm')?.components.map((c) => c.name)).toEqual([
+      'advanced-cluster-management',
+    ]);
+  });
+
+  it('gives the gating label to one feature, not to every feature it could prefix', () => {
+    const features = buildFeatures({ 'autoshift.io/acs': 'true', 'autoshift.io/odf': 'true' }, {}, [
+      component('odf-thing', ['autoshift.io/odf-csi-all-nodes']),
+    ]);
+
+    expect(features.find((f) => f.name === 'acs')?.components).toEqual([]);
+    expect(features.find((f) => f.name === 'odf')?.components.map((c) => c.name)).toEqual([
+      'odf-thing',
+    ]);
   });
 });

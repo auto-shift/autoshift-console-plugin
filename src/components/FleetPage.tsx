@@ -112,6 +112,15 @@ const CoverageCell: FC<{ coverage: Coverage }> = ({ coverage }) => {
   return <span className="autoshift-console__muted">—</span>;
 };
 
+/**
+ * Pick the label form that agrees with the figure above it.
+ *
+ * A tile is a number over a bare noun, so the noun has to agree with the number — "1 / Clusters"
+ * reads as badly here as "1 clusters" does in a sentence. Both forms are passed in already
+ * translated rather than built from a key, so the extractor still sees two literal t() calls.
+ */
+const countLabel = (n: number, one: string, many: string): string => (n === 1 ? one : many);
+
 const needsAttention = (c: ClusterView): boolean =>
   !c.available || c.compliance.nonCompliant > 0 || c.upgradePending;
 
@@ -131,28 +140,32 @@ const FleetPage: FC = () => {
               <FlexItem>
                 <Tile
                   value={model.clusters.length}
-                  label={t('Clusters')}
+                  label={countLabel(model.clusters.length, t('Cluster'), t('Clusters'))}
                   to={withDeployment('/autoshift/clusters', deployment)}
                 />
               </FlexItem>
               <FlexItem>
                 <Tile
                   value={model.clusterSets.length}
-                  label={t('Cluster sets')}
+                  label={countLabel(model.clusterSets.length, t('Cluster set'), t('Cluster sets'))}
                   to={withDeployment('/autoshift/cluster-sets', deployment)}
                 />
               </FlexItem>
               <FlexItem>
                 <Tile
                   value={model.components.length}
-                  label={t('Components')}
+                  label={countLabel(model.components.length, t('Component'), t('Components'))}
                   to={withDeployment('/autoshift/stacks', deployment)}
                 />
               </FlexItem>
               <FlexItem>
                 <Tile
                   value={unavailable}
-                  label={t('Clusters unreachable')}
+                  label={countLabel(
+                    unavailable,
+                    t('Cluster unreachable'),
+                    t('Clusters unreachable'),
+                  )}
                   tone={unavailable > 0 ? 'warn' : undefined}
                   to={withDeployment('/autoshift/clusters', deployment)}
                 />
@@ -160,7 +173,11 @@ const FleetPage: FC = () => {
               <FlexItem>
                 <Tile
                   value={nonCompliant}
-                  label={t('Clusters non-compliant')}
+                  label={countLabel(
+                    nonCompliant,
+                    t('Cluster non-compliant'),
+                    t('Clusters non-compliant'),
+                  )}
                   tone={nonCompliant > 0 ? 'danger' : undefined}
                   to={withDeployment('/autoshift/clusters', deployment)}
                 />
