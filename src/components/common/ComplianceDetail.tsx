@@ -49,7 +49,13 @@ export const ComplianceDetail: FC<{
   policyNamespace: string;
   /** Hide the cluster column where every row is the same cluster by construction. */
   showCluster?: boolean;
-}> = ({ checks, policyNamespace, showCluster = true }) => {
+  /**
+   * Shown in place of the table when there are no checks. "No policy has reported yet" is only one
+   * of the reasons that happens — nothing placed, and no policy attached, are the others, and they
+   * are not waiting on anything.
+   */
+  emptyText?: string;
+}> = ({ checks, policyNamespace, showCluster = true, emptyText }) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [filter, setFilter] = useState('');
   const [only, setOnly] = useState<'problems' | 'all'>('problems');
@@ -70,7 +76,7 @@ export const ComplianceDetail: FC<{
   if (checks.length === 0) {
     return (
       <Content component="p" className="autoshift-console__muted">
-        {t('No policy has reported on this yet.')}
+        {emptyText ?? t('No policy has reported on this yet.')}
       </Content>
     );
   }

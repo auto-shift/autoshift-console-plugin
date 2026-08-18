@@ -11,6 +11,7 @@ import {
   SplitItem,
   ToggleGroup,
   ToggleGroupItem,
+  Tooltip,
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
@@ -26,21 +27,40 @@ import './autoshift.css';
 
 type Grouping = 'stack' | 'tier';
 
-const TIER_COLOURS: Record<string, 'blue' | 'purple' | 'orange' | 'grey'> = {
-  stable: 'blue',
-  certified: 'purple',
+/**
+ * Tier is a maturity signal, so the colours run in that order rather than being merely distinct:
+ * green for supported, blue for certified-but-not-ours, orange for community. An unknown tier is
+ * grey — that is missing information, not a fourth level of risk.
+ */
+const TIER_COLOURS: Record<string, 'green' | 'blue' | 'orange' | 'grey'> = {
+  stable: 'green',
+  certified: 'blue',
   community: 'orange',
 };
 
 const TierLabel: FC<{ tier?: string }> = ({ tier }) => {
+  const { t } = useTranslation('plugin__autoshift-console');
   if (!tier) {
     return null;
   }
-  return (
+  const label = (
     <Label isCompact color={TIER_COLOURS[tier] ?? 'grey'}>
       {tier}
     </Label>
   );
+
+  // Spelled out rather than looked up from a map: a t() call with a computed key is invisible to
+  // the extractor, and the string would never reach the locale file.
+  const hint =
+    tier === 'stable'
+      ? t('Supported by the AutoShift project')
+      : tier === 'certified'
+        ? t('Certified by the vendor, maintained outside the project')
+        : tier === 'community'
+          ? t('Community-contributed — least tested')
+          : undefined;
+
+  return hint ? <Tooltip content={hint}>{label}</Tooltip> : label;
 };
 
 /** One component row plus its expandable policy-verdict detail. */
@@ -56,6 +76,15 @@ const ComponentRows: FC<{
     setExpanded(!expanded);
   };
   const span = showTier ? 8 : 7;
+  const placed = component.clusters.length > 0;
+
+  // Three distinct situations that all used to read "No policies": nothing is placed, the
+  // component ships no policy at all, or the policies exist but ACM has not reported on them yet.
+  const unknownCompliance = !placed
+    ? t('N/A')
+    : component.policies.length === 0
+      ? t('No policies')
+      : t('Not yet evaluated');
 
   return (
     <>
@@ -81,14 +110,16 @@ const ComponentRows: FC<{
           )}
         </Td>
         <Td dataLabel={t('Clusters')}>{component.clusters.length}</Td>
+        {/* Sync, health and compliance are all suppressed on a component no Placement selects:
+            with nothing running there is nothing for them to be a verdict on. */}
         <Td dataLabel={t('Sync')}>
-          <ArgoLabel status={component.syncStatus} />
+          <ArgoLabel status={component.syncStatus} placed={placed} />
         </Td>
         <Td dataLabel={t('Health')}>
-          <ArgoLabel status={component.healthStatus} />
+          <ArgoLabel status={component.healthStatus} placed={placed} />
         </Td>
         <Td dataLabel={t('Compliance')}>
-          <ComplianceLabel counts={component.compliance} unknownText={t('No policies')} />
+          <ComplianceLabel counts={component.compliance} unknownText={unknownCompliance} />
         </Td>
       </Tr>
       {expanded && (
@@ -96,7 +127,19 @@ const ComponentRows: FC<{
           <Td colSpan={span}>
             {/* Cluster column stays: a component spans clusters, and "which one is failing" is
                 the whole reason to open this row. */}
-            <ComplianceDetail checks={component.checks} policyNamespace={policyNamespace} />
+            <ComplianceDetail
+              checks={component.checks}
+              policyNamespace={policyNamespace}
+              emptyText={
+                !placed
+                  ? t(
+                      'No cluster is selected by this component’s Placement, so nothing evaluates it.',
+                    )
+                  : component.policies.length === 0
+                    ? t('This component ships no policy.')
+                    : undefined
+              }
+            />
           </Td>
         </Tr>
       )}

@@ -60,8 +60,19 @@ export interface Deployment {
   release: string;
   /** Namespace holding the deployment's policies, e.g. "policies-autoshift". */
   policyNamespace: string;
-  /** targetRevision from the deployment's Applications — git branch/tag or OCI version. */
-  version?: string;
+  /**
+   * targetRevision from the deployment's Applications: the git ref this fleet FOLLOWS, which is a
+   * branch as often as a tag. Deliberately not called a version — "main" names a moving target and
+   * says nothing about what is deployed. `revision` is the part that identifies the deployed code.
+   */
+  trackingRef?: string;
+  /** The commit/digest Argo CD actually resolved the tracking ref to, from status.sync.revision. */
+  revision?: string;
+  /**
+   * ManagedClusters in one of this deployment's cluster sets. Counted during deployment discovery
+   * so a fleet switcher can say which fleet holds data before it is selected.
+   */
+  clusterCount?: number;
 }
 
 /** Which layer a resolved value came from. Ordered least to most specific. */

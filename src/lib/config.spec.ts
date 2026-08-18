@@ -1,5 +1,6 @@
 import {
   DELETE_SENTINEL,
+  buildFeatures,
   buildProvenance,
   flatten,
   formatValue,
@@ -10,6 +11,8 @@ import {
   parseJsonKey,
   parseYamlKey,
   shortLabel,
+  shortRevision,
+  toLabelRow,
 } from './config';
 import type { ConfigLayerInput } from './config';
 
@@ -194,5 +197,87 @@ describe('display helpers', () => {
   it('reads optional keys without inventing values', () => {
     expect(lookupKey({ a: 'x' }, 'a')).toBe('x');
     expect(lookupKey({ a: 'x' }, 'b')).toBeUndefined();
+  });
+
+  it('abbreviates a git sha but leaves other revisions whole', () => {
+    expect(shortRevision('0123456789abcdef0123456789abcdef01234567')).toBe('0123456');
+    expect(shortRevision('sha256:abcdef')).toBe('sha256:abcdef');
+    expect(shortRevision('v1.2.3')).toBe('v1.2.3');
+    expect(shortRevision(undefined)).toBeUndefined();
+  });
+});
+
+describe('toLabelRow', () => {
+  it('drops the feature prefix and normalises separators', () => {
+    expect(toLabelRow('aap', 'aap-file_storage_size', '20Gi')).toEqual({
+      key: 'aap-file_storage_size',
+      value: '20Gi',
+      display: 'File storage size',
+      concern: 'storage',
+    });
+  });
+
+  // The double negative the raw key forces on the reader: aap-hub-disabled: on means the hub IS
+  // disabled. Name and value are inverted together, so the row reads "Hub / off".
+  it('states the effective thing for a -disabled label', () => {
+    const row = toLabelRow('aap', 'aap-hub-disabled', 'true');
+    expect(row.display).toBe('Hub');
+    expect(labelState(row.key, row.value)).toBe('off');
+  });
+
+  it('keeps the feature name when the whole label is the toggle', () => {
+    expect(toLabelRow('aap', 'aap', 'true').display).toBe('Aap');
+    expect(toLabelRow('aap', 'aap-disabled', 'true').display).toBe('Aap');
+  });
+
+  it('sorts labels into the concern they speak to', () => {
+    expect(toLabelRow('acs', 'acs-channel', 'stable').concern).toBe('source');
+    expect(toLabelRow('acs', 'acs-source-namespace', 'openshift-marketplace').concern).toBe(
+      'source',
+    );
+    expect(toLabelRow('aap', 'aap-file-storage_storage_class', 'gp3').concern).toBe('storage');
+    expect(toLabelRow('aap', 'aap-eda-disabled', 'true').concern).toBe('toggle');
+    expect(toLabelRow('aap', 'aap-controller-replicas', '3').concern).toBe('setting');
+  });
+});
+
+describe('buildFeatures', () => {
+  const component = (name: string, gatingLabels: string[]) => ({
+    name,
+    gatingLabels,
+    clusters: [],
+    policies: [],
+  });
+
+  /*
+   * The bug this pins: a cluster set declares only the labels it OVERRIDES. A component gating on
+   * autoshift.io/acm-observability is still an acm component when the set leaves observability at
+   * its policy default, so requiring the set to declare that exact key left the acm feature
+   * reporting no consumers at all on a minimal profile.
+   */
+  it('joins a component whose gating label the set leaves at its default', () => {
+    const features = buildFeatures(
+      {
+        'autoshift.io/acm-channel': 'release-2.17',
+        'autoshift.io/acm-source': 'redhat-operators',
+      },
+      {},
+      [component('advanced-cluster-management', ['autoshift.io/acm-observability'])],
+    );
+
+    expect(features.find((f) => f.name === 'acm')?.components.map((c) => c.name)).toEqual([
+      'advanced-cluster-management',
+    ]);
+  });
+
+  it('gives the gating label to one feature, not to every feature it could prefix', () => {
+    const features = buildFeatures({ 'autoshift.io/acs': 'true', 'autoshift.io/odf': 'true' }, {}, [
+      component('odf-thing', ['autoshift.io/odf-csi-all-nodes']),
+    ]);
+
+    expect(features.find((f) => f.name === 'acs')?.components).toEqual([]);
+    expect(features.find((f) => f.name === 'odf')?.components.map((c) => c.name)).toEqual([
+      'odf-thing',
+    ]);
   });
 });
