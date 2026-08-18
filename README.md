@@ -156,6 +156,12 @@ trees, and Dependabot updates `package.json` + `yarn.lock` and nothing else, so 
 would silently go stale and fail every build. `ocp-targets.json` records the choice that has to be
 made if 4.23 is added.
 
+`src/ocp-targets.spec.ts` is what stops that being silent. Add a second target and it fails in
+`yarn test` naming the constraint, instead of surfacing later as an unexplained lockfile-drift
+error inside `yarn install --immutable`. It does not make multi-target work — it makes breaking the
+single-target assumption loud. Satisfying it means a lockfile per target *and* npm updates switched
+off in `.github/dependabot.yml`, refreshed by hand on each bump.
+
 Unit tests cover the analytical core — provenance derivation, label merge, catalog resolution — in
 `src/lib/*.spec.ts`. That logic mirrors AutoShift's own merge semantics, so it is the part most
 worth pinning down.
