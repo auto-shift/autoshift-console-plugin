@@ -2071,9 +2071,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core-darwin-arm64@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-darwin-arm64@npm:1.16.0"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@swc/core-darwin-x64@npm:1.15.47":
   version: 1.15.47
   resolution: "@swc/core-darwin-x64@npm:1.15.47"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@swc/core-darwin-x64@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-darwin-x64@npm:1.16.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -2085,9 +2099,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core-linux-arm-gnueabihf@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.16.0"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
 "@swc/core-linux-arm64-gnu@npm:1.15.47":
   version: 1.15.47
   resolution: "@swc/core-linux-arm64-gnu@npm:1.15.47"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-arm64-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.16.0"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
@@ -2099,9 +2127,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core-linux-arm64-musl@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-arm64-musl@npm:1.16.0"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
 "@swc/core-linux-ppc64-gnu@npm:1.15.47":
   version: 1.15.47
   resolution: "@swc/core-linux-ppc64-gnu@npm:1.15.47"
+  conditions: os=linux & cpu=ppc64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-ppc64-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-ppc64-gnu@npm:1.16.0"
   conditions: os=linux & cpu=ppc64 & libc=glibc
   languageName: node
   linkType: hard
@@ -2113,9 +2155,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core-linux-s390x-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-s390x-gnu@npm:1.16.0"
+  conditions: os=linux & cpu=s390x & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@swc/core-linux-x64-gnu@npm:1.15.47":
   version: 1.15.47
   resolution: "@swc/core-linux-x64-gnu@npm:1.15.47"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-x64-gnu@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-x64-gnu@npm:1.16.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
@@ -2127,9 +2183,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core-linux-x64-musl@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-linux-x64-musl@npm:1.16.0"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
 "@swc/core-win32-arm64-msvc@npm:1.15.47":
   version: 1.15.47
   resolution: "@swc/core-win32-arm64-msvc@npm:1.15.47"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@swc/core-win32-arm64-msvc@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.16.0"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
@@ -2141,6 +2211,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core-win32-ia32-msvc@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.16.0"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
 "@swc/core-win32-x64-msvc@npm:1.15.47":
   version: 1.15.47
   resolution: "@swc/core-win32-x64-msvc@npm:1.15.47"
@@ -2148,7 +2225,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core@npm:^1.15.18, @swc/core@npm:^1.15.41, @swc/core@npm:^1.15.47":
+"@swc/core-win32-x64-msvc@npm:1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core-win32-x64-msvc@npm:1.16.0"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@swc/core@npm:^1.15.18, @swc/core@npm:^1.15.47":
   version: 1.15.47
   resolution: "@swc/core@npm:1.15.47"
   dependencies:
@@ -2200,6 +2284,58 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core@npm:^1.16.0":
+  version: 1.16.0
+  resolution: "@swc/core@npm:1.16.0"
+  dependencies:
+    "@swc/core-darwin-arm64": "npm:1.16.0"
+    "@swc/core-darwin-x64": "npm:1.16.0"
+    "@swc/core-linux-arm-gnueabihf": "npm:1.16.0"
+    "@swc/core-linux-arm64-gnu": "npm:1.16.0"
+    "@swc/core-linux-arm64-musl": "npm:1.16.0"
+    "@swc/core-linux-ppc64-gnu": "npm:1.16.0"
+    "@swc/core-linux-s390x-gnu": "npm:1.16.0"
+    "@swc/core-linux-x64-gnu": "npm:1.16.0"
+    "@swc/core-linux-x64-musl": "npm:1.16.0"
+    "@swc/core-win32-arm64-msvc": "npm:1.16.0"
+    "@swc/core-win32-ia32-msvc": "npm:1.16.0"
+    "@swc/core-win32-x64-msvc": "npm:1.16.0"
+    "@swc/counter": "npm:^0.1.3"
+    "@swc/types": "npm:^0.1.28"
+  peerDependencies:
+    "@swc/helpers": ">=0.5.17"
+  dependenciesMeta:
+    "@swc/core-darwin-arm64":
+      optional: true
+    "@swc/core-darwin-x64":
+      optional: true
+    "@swc/core-linux-arm-gnueabihf":
+      optional: true
+    "@swc/core-linux-arm64-gnu":
+      optional: true
+    "@swc/core-linux-arm64-musl":
+      optional: true
+    "@swc/core-linux-ppc64-gnu":
+      optional: true
+    "@swc/core-linux-s390x-gnu":
+      optional: true
+    "@swc/core-linux-x64-gnu":
+      optional: true
+    "@swc/core-linux-x64-musl":
+      optional: true
+    "@swc/core-win32-arm64-msvc":
+      optional: true
+    "@swc/core-win32-ia32-msvc":
+      optional: true
+    "@swc/core-win32-x64-msvc":
+      optional: true
+  peerDependenciesMeta:
+    "@swc/helpers":
+      optional: true
+  checksum: 10c0/34b74431b38640e4e4ac3537dfb4222f92a6179b29d3c32a1501cf86c195736c9e16dcfabffeedfb29697d21afd2f6b83e5ff71cf897c71b491ef9e0161cee36
+  languageName: node
+  linkType: hard
+
 "@swc/counter@npm:^0.1.3":
   version: 0.1.3
   resolution: "@swc/counter@npm:0.1.3"
@@ -2220,7 +2356,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/types@npm:^0.1.27":
+"@swc/types@npm:^0.1.27, @swc/types@npm:^0.1.28":
   version: 0.1.28
   resolution: "@swc/types@npm:0.1.28"
   dependencies:
@@ -3516,7 +3652,7 @@ __metadata:
     fork-ts-checker-webpack-plugin: "npm:^9.1.0"
     globals: "npm:^17.11.0"
     i18next: "npm:^26.3.6"
-    i18next-cli: "npm:1.67.8"
+    i18next-cli: "npm:1.69.2"
     jest: "npm:^30.4.2"
     jest-environment-jsdom: "npm:^30.4.1"
     jest-junit: "npm:^17.0.0"
@@ -4039,6 +4175,13 @@ __metadata:
   version: 14.0.3
   resolution: "commander@npm:14.0.3"
   checksum: 10c0/755652564bbf56ff2ff083313912b326450d3f8d8c85f4b71416539c9a05c3c67dbd206821ca72635bf6b160e2afdefcb458e86b317827d5cb333b69ce7f1a24
+  languageName: node
+  linkType: hard
+
+"commander@npm:^15.0.0":
+  version: 15.0.0
+  resolution: "commander@npm:15.0.0"
+  checksum: 10c0/539229c171914ea1ccd45ee5f10d924289a12a684ea3a7a44147abe54003c35ed6de9ae4ad198d88c29fdf403dca0428451a388234e6dc01b6faa978fb207206
   languageName: node
   linkType: hard
 
@@ -5151,6 +5294,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"execa@npm:^10.0.1":
+  version: 10.0.1
+  resolution: "execa@npm:10.0.1"
+  dependencies:
+    "@sindresorhus/merge-streams": "npm:^4.0.0"
+    figures: "npm:^6.1.0"
+    get-stream: "npm:^9.0.1"
+    human-signals: "npm:^8.0.1"
+    is-plain-obj: "npm:^4.1.0"
+    is-stream: "npm:^4.0.1"
+    npm-run-path: "npm:^6.0.0"
+    pretty-ms: "npm:^9.3.0"
+    signal-exit: "npm:^4.1.0"
+    strip-final-newline: "npm:^4.0.0"
+    which-command: "npm:^0.1.0"
+    yoctocolors: "npm:^2.1.2"
+  checksum: 10c0/5fc05e35729344d8fdddbc92d91d995cb9cb9080f953cd60367285a7001f1bca9a7deb6f421413a62e6f80d2c2e91af9cda6990b0a88e854cb414506b4b05fce
+  languageName: node
+  linkType: hard
+
 "execa@npm:^5.1.1":
   version: 5.1.1
   resolution: "execa@npm:5.1.1"
@@ -5165,26 +5328,6 @@ __metadata:
     signal-exit: "npm:^3.0.3"
     strip-final-newline: "npm:^2.0.0"
   checksum: 10c0/c8e615235e8de4c5addf2fa4c3da3e3aa59ce975a3e83533b4f6a71750fb816a2e79610dc5f1799b6e28976c9ae86747a36a606655bf8cb414a74d8d507b304f
-  languageName: node
-  linkType: hard
-
-"execa@npm:^9.6.1":
-  version: 9.6.1
-  resolution: "execa@npm:9.6.1"
-  dependencies:
-    "@sindresorhus/merge-streams": "npm:^4.0.0"
-    cross-spawn: "npm:^7.0.6"
-    figures: "npm:^6.1.0"
-    get-stream: "npm:^9.0.0"
-    human-signals: "npm:^8.0.1"
-    is-plain-obj: "npm:^4.1.0"
-    is-stream: "npm:^4.0.1"
-    npm-run-path: "npm:^6.0.0"
-    pretty-ms: "npm:^9.2.0"
-    signal-exit: "npm:^4.1.0"
-    strip-final-newline: "npm:^4.0.0"
-    yoctocolors: "npm:^2.1.1"
-  checksum: 10c0/636b36585306a3c8bc3a9d7b25d2d915fb06d8c9b9b02a804280d62562de3b34535affc1b7702b039320e0953daa6545a073f3c4b63fe974c1fe11336c56b467
   languageName: node
   linkType: hard
 
@@ -5710,7 +5853,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"get-stream@npm:^9.0.0":
+"get-stream@npm:^9.0.1":
   version: 9.0.1
   resolution: "get-stream@npm:9.0.1"
   dependencies:
@@ -6137,30 +6280,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-cli@npm:1.67.8":
-  version: 1.67.8
-  resolution: "i18next-cli@npm:1.67.8"
+"i18next-cli@npm:1.69.2":
+  version: 1.69.2
+  resolution: "i18next-cli@npm:1.69.2"
   dependencies:
     "@croct/json5-parser": "npm:^0.2.2"
-    "@swc/core": "npm:^1.15.41"
+    "@swc/core": "npm:^1.16.0"
     chokidar: "npm:^5.0.0"
-    commander: "npm:^14.0.3"
-    execa: "npm:^9.6.1"
+    commander: "npm:^15.0.0"
+    execa: "npm:^10.0.1"
     glob: "npm:^13.0.6"
-    i18next: "npm:^26.3.1"
+    i18next: "npm:^26.3.6"
     i18next-resources-for-ts: "npm:^2.1.0"
     inquirer: "npm:^14.0.2"
     jiti: "npm:^2.7.0"
     jsonc-parser: "npm:^3.3.1"
-    magic-string: "npm:^0.30.21"
-    minimatch: "npm:^10.2.5"
-    ora: "npm:^9.4.0"
-    react: "npm:^19.2.7"
-    react-i18next: "npm:^17.0.8"
+    magic-string: "npm:^1.2.0"
+    minimatch: "npm:^10.2.6"
+    ora: "npm:^9.4.1"
+    react: "npm:^19.2.8"
+    react-i18next: "npm:^17.0.11"
     yaml: "npm:^2.9.0"
   bin:
     i18next-cli: dist/esm/cli.js
-  checksum: 10c0/329499e5d93408e7b443e47974da65102c8dcebfcd9130595209443851efb6147ef8c9e9d1d09f1419110bbcf684853aec93feb5187768502a144be0e24c904c
+  checksum: 10c0/2bf89eeb2f0dc029fd62e2bd4aed93cd7449aeb0e601b04fd7dc2d7c9a79ae2a2e3890b62933441bbb18b76a3acdf56b873fb805a00d099ea9c1c76a5d82e8d3
   languageName: node
   linkType: hard
 
@@ -6178,7 +6321,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next@npm:^26.3.1, i18next@npm:^26.3.6":
+"i18next@npm:^26.3.6":
   version: 26.3.6
   resolution: "i18next@npm:26.3.6"
   peerDependencies:
@@ -7639,12 +7782,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:^0.30.21":
-  version: 0.30.21
-  resolution: "magic-string@npm:0.30.21"
+"magic-string@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "magic-string@npm:1.2.0"
   dependencies:
     "@jridgewell/sourcemap-codec": "npm:^1.5.5"
-  checksum: 10c0/299378e38f9a270069fc62358522ddfb44e94244baa0d6a8980ab2a9b2490a1d03b236b447eee309e17eb3bddfa482c61259d47960eb018a904f0ded52780c4a
+  checksum: 10c0/a86d8a299ee67818a262403937b084fd03e67ce6e407a65bbed477fc74b0dea9ead912c75e822b5a3a034e05ea8531d73075836ba68b2fda29c0a676976546fe
   languageName: node
   linkType: hard
 
@@ -7823,7 +7966,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^10.2.2, minimatch@npm:^10.2.5, minimatch@npm:^9.0.3 || ^10.1.2":
+"minimatch@npm:^10.2.2, minimatch@npm:^10.2.6, minimatch@npm:^9.0.3 || ^10.1.2":
   version: 10.2.6
   resolution: "minimatch@npm:10.2.6"
   dependencies:
@@ -8251,7 +8394,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ora@npm:^9.4.0":
+"ora@npm:^9.4.1":
   version: 9.4.1
   resolution: "ora@npm:9.4.1"
   dependencies:
@@ -8669,7 +8812,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-ms@npm:^9.2.0":
+"pretty-ms@npm:^9.3.0":
   version: 9.3.0
   resolution: "pretty-ms@npm:9.3.0"
   dependencies:
@@ -8822,7 +8965,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-i18next@npm:^17.0.8":
+"react-i18next@npm:^17.0.11":
   version: 17.0.11
   resolution: "react-i18next@npm:17.0.11"
   dependencies:
@@ -8919,7 +9062,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^19.2.7":
+"react@npm:^19.2.8":
   version: 19.2.8
   resolution: "react@npm:19.2.8"
   checksum: 10c0/5f86bdb56426652fd6d989d30a6f2e603c057272c47c9ca3a3fbe190a3a39ee9ccce937d63cfc039717abed1b8891d6a499134bc35311acc07eafdacd86537cd
@@ -10851,6 +10994,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"which-command@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "which-command@npm:0.1.0"
+  bin:
+    which-command: cli.js
+  checksum: 10c0/15b3952b466961ce147de197ef2d40d0f6242dac7d07785936541f7b8f6dba632bd6eab0abac362b80efc0029c536d044717c10aa96562831b0d0a7d548a0029
+  languageName: node
+  linkType: hard
+
 "which-typed-array@npm:^1.1.16, which-typed-array@npm:^1.1.19":
   version: 1.1.22
   resolution: "which-typed-array@npm:1.1.22"
@@ -11073,7 +11225,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yoctocolors@npm:^2.1.1":
+"yoctocolors@npm:^2.1.1, yoctocolors@npm:^2.1.2":
   version: 2.2.0
   resolution: "yoctocolors@npm:2.2.0"
   checksum: 10c0/ca179aa83401aa0711f268fda38145a44c828e612a5f5265439efb5796cd63c46ca6b786bae3b74c75440a48518c36b5b23cba7fbb76ea8af5a9f85f830a5754
