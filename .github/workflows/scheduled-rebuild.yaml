@@ -63,7 +63,7 @@ jobs:
         run: git checkout "${{ steps.tag.outputs.tag }}"
 
       # Resolve the CURRENT amd64 digest for each base rather than using the Dockerfile's pinned
-      # default — that pin is what makes ordinary builds reproducible, and this job is explicitly
+      # value — that pin is what makes ordinary builds reproducible, and this job is explicitly
       # the one allowed to move past it.
       - name: Resolve current base image digests
         if: steps.tag.outputs.found == 'true'
@@ -84,10 +84,30 @@ jobs:
           BUILDER=$(resolve ubi9/nodejs-22)
           RUNTIME=$(resolve ubi9/nginx-126)
           [ -n "$BUILDER" ] && [ -n "$RUNTIME" ] || { echo "could not resolve base digests"; exit 1; }
-          echo "builder=registry.access.redhat.com/ubi9/nodejs-22@${BUILDER}" >> "$GITHUB_OUTPUT"
-          echo "runtime=registry.access.redhat.com/ubi9/nginx-126@${RUNTIME}" >> "$GITHUB_OUTPUT"
+          echo "builder=${BUILDER}" >> "$GITHUB_OUTPUT"
+          echo "runtime=${RUNTIME}" >> "$GITHUB_OUTPUT"
           echo "Builder: ${BUILDER}"
           echo "Runtime: ${RUNTIME}"
+
+      # The Dockerfile pins bases as literal FROM lines so Dependabot can track them, which leaves
+      # no --build-arg to override. Rewriting them here is the same override by other means: the
+      # checkout is ephemeral and nothing is committed, so the repo pin still moves only by PR.
+      - name: Repin bases to current digests
+        if: steps.tag.outputs.found == 'true'
+        env:
+          BUILDER: ${{ steps.bases.outputs.builder }}
+          RUNTIME: ${{ steps.bases.outputs.runtime }}
+        run: |
+          # The optional :tag group matters: this job checks out the released tag, and releases cut
+          # before the FROM lines were retagged carry the bare image@sha256 form.
+          sed -i -E "s|(ubi9/nodejs-22(:[^@[:space:]]+)?@)sha256:[0-9a-f]{64}|\1${BUILDER}|" Dockerfile
+          sed -i -E "s|(ubi9/nginx-126(:[^@[:space:]]+)?@)sha256:[0-9a-f]{64}|\1${RUNTIME}|" Dockerfile
+          # A sed that matches nothing still exits 0. Without this check a renamed base or a
+          # reformatted FROM line would rebuild against the stale pin and report a clean refresh
+          # that refreshed nothing — the exact failure this job exists to prevent.
+          grep -q "${BUILDER}" Dockerfile || { echo "builder repin did not apply"; exit 1; }
+          grep -q "${RUNTIME}" Dockerfile || { echo "runtime repin did not apply"; exit 1; }
+          grep -n '^FROM' Dockerfile
 
       - uses: actions/setup-node@v5
         if: steps.tag.outputs.found == 'true'
@@ -116,8 +136,6 @@ jobs:
           load: true
           tags: ${{ env.IMAGE }}:rebuild-ocp${{ matrix.ocp }}
           build-args: |
-            BUILDER_IMAGE=${{ steps.bases.outputs.builder }}
-            RUNTIME_IMAGE=${{ steps.bases.outputs.runtime }}
             PLUGIN_VERSION=${{ steps.tag.outputs.tag }}-ocp${{ matrix.ocp }}
             PLUGIN_REVISION=${{ github.sha }}
 
@@ -140,7 +158,7 @@ jobs:
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
 
-      # Published under a dated tag as well as latest, so a cluster can pin to a specific rebuild
+      # Published under a dated tag as well as the floating one, so a cluster can pin to a rebuild
       # and the release tag itself keeps meaning "the image originally cut for that version".
       - name: Push rebuild
         if: steps.tag.outputs.found == 'true'
@@ -163,8 +181,14 @@ jobs:
 
   # Reports on the image that is actually deployed, including CVEs with no fix available. This
   # never gates anything — it opens an issue so the exposure is visible and tracked.
+  #
+  # Ordered after the rebuild so it scans what that job just pushed. Run in parallel it raced the
+  # push and always graded last week's image, which meant a rebuild was never checked after the
+  # fact. always() keeps the report alive when the rebuild fails its gate — that is precisely the
+  # week the published image is stale and someone needs to be told.
   scan-published:
-    needs: targets
+    needs: [targets, rebuild]
+    if: always() && needs.targets.result == 'success'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -251,7 +275,7 @@ jobs:
             }
 
             const body = [
-              `Scheduled scan of \`${{ env.IMAGE }}:latest\` found **fixable** HIGH/CRITICAL`,
+              `Scheduled scan of \`${{ env.IMAGE }}:ocp${{ matrix.ocp }}\` found **fixable** HIGH/CRITICAL`,
               'vulnerabilities. A fix exists upstream, so the weekly rebuild should have cleared',
               'these — check whether that job is failing.',
               '',

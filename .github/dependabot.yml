@@ -3,6 +3,10 @@ updates:
   # Keeps the base image digests in the Dockerfile current. The weekly rebuild picks up patched
   # bases without this, but that only refreshes the published image — this is what moves the
   # committed pin, so ordinary PR builds are scanned against the same base that ships.
+  #
+  # This only works while the Dockerfile keeps its bases as literal `FROM image:tag@sha256:...`
+  # lines. Behind an ARG the parser finds nothing, reports success, and opens no PR
+  # (dependabot-core#4597) — a silent failure, not a visible one.
   - package-ecosystem: docker
     directory: /
     schedule:

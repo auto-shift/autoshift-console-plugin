@@ -16,15 +16,6 @@
 # nothing to action until Red Hat ships a fix, and the weekly scan of the published image reports
 # those separately. This file is only for a FIXABLE HIGH/CRITICAL that genuinely does not apply.
 
-vulnerabilities:
-  - id: CVE-2026-11940
-    statement: >-
-      python3 and python3-libs, inherited from the ubi9/nginx-126 base image. CPython tarfile
-      extraction filter bypass: exploiting it requires running Python code that extracts an
-      attacker-controlled tarball. This image runs nginx serving pre-built static assets as UID
-      1001 and never executes Python, so there is no reachable path.
-
-      The fixed RPM (3.9.25-7.el9_8.3) shipped in RHSA-2026:54268 on 2026-08-12, but the base image
-      has not been rebuilt against it yet — the pinned digest and current :latest both still carry
-      3.9.25-7.el9_8.2. Remove this entry once Dependabot bumps the base digest past the rebuild.
-    expired_at: 2026-09-13
+# Currently empty: the CVE-2026-11940 entry (python3 tarfile filter bypass, inherited from the
+# nginx-126 base) was removed once the base was repinned to a build carrying 3.9.25-7.el9_8.3.
+vulnerabilities: []

@@ -2,17 +2,20 @@
 # the module-federation chunks at runtime and loads them into its own React app. There is no
 # server-side code, so the runtime base image is essentially the whole attack surface.
 #
-# Base images are pinned by digest so a scan result describes exactly what ships. The tag beside
-# each digest is documentation only. Bump both together (Dependabot raises the PR), or pass
-# --build-arg to rebuild against a newer base without editing the file — which is what the weekly
-# rebuild workflow does to pick up Red Hat's patched bases.
+# Base images are pinned by digest so a scan result describes exactly what ships, and written as
+# literal FROM lines because Dependabot cannot see an image reference behind an ARG
+# (dependabot-core#4597, open since 2022). This file used the ARG form until the pins were found
+# eleven days stale: the docker ecosystem ran every week, parsed zero dependencies, and reported
+# success, so nothing ever said the pin had stopped moving.
+#
+# The tag is part of the reference rather than a comment beside it — Dependabot needs it to know
+# which stream a digest belongs to, and drops the dependency without it.
+#
+# Do not collapse these back into an ARG. The weekly rebuild rewrites the digests in its own
+# ephemeral checkout, which is how it builds against Red Hat's patched bases without waiting for
+# the Dependabot PR to merge.
 
-# registry.access.redhat.com/ubi9/nodejs-22:latest
-ARG BUILDER_IMAGE=registry.access.redhat.com/ubi9/nodejs-22@sha256:9d05b40b1127787dc077edb23b9c71ba505d11c86b803b86537d660fb18732b1
-# registry.access.redhat.com/ubi9/nginx-126:latest
-ARG RUNTIME_IMAGE=registry.access.redhat.com/ubi9/nginx-126@sha256:78cbc9bccd70e1a13c6ca6fa505c693da1fda90ec6b6754f32135108dd6bfdb0
-
-FROM ${BUILDER_IMAGE} AS build
+FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:2d18b7fd7fa3c1b3d41d3a1111234c6d8745107da63d8f68e4b07d761abddef2 AS build
 USER root
 
 # Playwright is a devDependency used only for e2e; downloading browsers would add ~400MB to a
@@ -28,7 +31,7 @@ RUN LOCAL_YARN="node $(awk '/yarnPath:/{print $2}' .yarnrc.yml)" && \
     $LOCAL_YARN install --immutable && \
     $LOCAL_YARN build
 
-FROM ${RUNTIME_IMAGE}
+FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:ee81c23bc9d780386a4ad3331979ef1359c11adbbf093339db506341c868cf1d
 
 # Named PLUGIN_* rather than VERSION/REVISION: podman/buildah silently clobbers a build arg
 # called VERSION (verified on 5.4.1 — --build-arg VERSION=v9.9.9 lands in the label as "0"), so
