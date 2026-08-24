@@ -3652,7 +3652,7 @@ __metadata:
     fork-ts-checker-webpack-plugin: "npm:^9.1.0"
     globals: "npm:^17.11.0"
     i18next: "npm:^26.3.6"
-    i18next-cli: "npm:1.69.2"
+    i18next-cli: "npm:1.71.0"
     jest: "npm:^30.4.2"
     jest-environment-jsdom: "npm:^30.4.1"
     jest-junit: "npm:^17.0.0"
@@ -6280,9 +6280,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-cli@npm:1.69.2":
-  version: 1.69.2
-  resolution: "i18next-cli@npm:1.69.2"
+"i18next-cli@npm:1.71.0":
+  version: 1.71.0
+  resolution: "i18next-cli@npm:1.71.0"
   dependencies:
     "@croct/json5-parser": "npm:^0.2.2"
     "@swc/core": "npm:^1.16.0"
@@ -6303,7 +6303,7 @@ __metadata:
     yaml: "npm:^2.9.0"
   bin:
     i18next-cli: dist/esm/cli.js
-  checksum: 10c0/2bf89eeb2f0dc029fd62e2bd4aed93cd7449aeb0e601b04fd7dc2d7c9a79ae2a2e3890b62933441bbb18b76a3acdf56b873fb805a00d099ea9c1c76a5d82e8d3
+  checksum: 10c0/5d87b0742fdb40eed555569ff25dafd3ab314c8bf9b5078d9b3e34afe7af91b23867d6bc8caee667f9f6ef39e3578f47581844974ae31182da36489a6e1cb56b
   languageName: node
   linkType: hard
 
