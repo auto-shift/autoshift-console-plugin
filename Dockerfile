@@ -31,7 +31,7 @@ RUN LOCAL_YARN="node $(awk '/yarnPath:/{print $2}' .yarnrc.yml)" && \
     $LOCAL_YARN install --immutable && \
     $LOCAL_YARN build
 
-FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:ee81c23bc9d780386a4ad3331979ef1359c11adbbf093339db506341c868cf1d
+FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:45e1b68d39cb7e9f8a89f20ba0ab0c6cc7ade04e25d51d14ae75fa77b5320518
 
 # Named PLUGIN_* rather than VERSION/REVISION: podman/buildah silently clobbers a build arg
 # called VERSION (verified on 5.4.1 — --build-arg VERSION=v9.9.9 lands in the label as "0"), so
