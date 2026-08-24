@@ -15,7 +15,7 @@
 # ephemeral checkout, which is how it builds against Red Hat's patched bases without waiting for
 # the Dependabot PR to merge.
 
-FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:2d18b7fd7fa3c1b3d41d3a1111234c6d8745107da63d8f68e4b07d761abddef2 AS build
+FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:4c44b8f1cfbfc36b900216809eeb6ae49f4f7b90fe1d47d66ab6be1cb5ee58d4 AS build
 USER root
 
 # Playwright is a devDependency used only for e2e; downloading browsers would add ~400MB to a
