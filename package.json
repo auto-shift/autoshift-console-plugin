@@ -1,6 +1,6 @@
 {
   "name": "autoshift-console",
-  "version": "0.0.1",
+  "version": "0.0.0-dev",
   "description": "Read-only OpenShift console plugin for AutoShift fleet configuration",
   "private": true,
   "type": "module",
@@ -75,7 +75,7 @@
   },
   "consolePlugin": {
     "name": "autoshift-console",
-    "version": "0.0.1",
+    "version": "0.0.0-dev",
     "displayName": "AutoShift",
     "description": "Fleet configuration, resolution provenance and policy compliance for clusters managed by AutoShift.",
     "exposedModules": {
