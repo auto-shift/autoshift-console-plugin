@@ -15,7 +15,7 @@
 # ephemeral checkout, which is how it builds against Red Hat's patched bases without waiting for
 # the Dependabot PR to merge.
 
-FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:4c44b8f1cfbfc36b900216809eeb6ae49f4f7b90fe1d47d66ab6be1cb5ee58d4 AS build
+FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:433b4d0f31b048cdd7b125d96c964f08235496a6b96fe77fbc28166c828d4c5a AS build
 USER root
 
 # Which OpenShift release this image is built for. One image per target: the console supplies
@@ -43,7 +43,7 @@ RUN set -eu; \
     (cd "targets/${OCP_TARGET}" && node "../../$YARN_REL" install --immutable); \
     OCP_TARGET="${OCP_TARGET}" node "$YARN_REL" build
 
-FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:45e1b68d39cb7e9f8a89f20ba0ab0c6cc7ade04e25d51d14ae75fa77b5320518
+FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:468ae4288539d349f10803defdc5af72b56335f76fdafa7bccea5c6206fef1de
 
 # Named PLUGIN_* rather than VERSION/REVISION: podman/buildah silently clobbers a build arg
 # called VERSION (verified on 5.4.1 — --build-arg VERSION=v9.9.9 lands in the label as "0"), so
