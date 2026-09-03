@@ -102,7 +102,10 @@ for (const [minor, spec] of Object.entries(targets)) {
     JSON.stringify(
       {
         name: `autoshift-console-ocp${minor}`,
-        version: rootPkg.version,
+        // Deliberately no version field. Nothing reads it — webpack.config.ts passes the plugin
+        // metadata from the root package.json — and copying the root version here would couple
+        // these files to it, so the release workflow could not stamp the released version into
+        // the root without this script's --check failing in the same run.
         description: `OpenShift ${minor} module-federation contract for ${rootPkg.name}`,
         private: true,
         type: 'module',

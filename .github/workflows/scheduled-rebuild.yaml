@@ -25,9 +25,30 @@ jobs:
       matrix: ${{ steps.read.outputs.matrix }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # The target list comes from the RELEASED tag, not from the default branch. This job
+      # rebuilds released code, and main can declare targets that the newest release predates:
+      # when 4.20 and 4.21 were added, main listed three targets while the newest tag contained
+      # only 4.22, so the extra legs would check out that tag, find no targets/4.20 directory and
+      # fail. Reading the list from the tag keeps the matrix and the source in step.
+      #
+      # With no release tag yet there is nothing to rebuild, but an empty matrix vector is a
+      # workflow error rather than a skip — so fall back to the current file and let the rebuild
+      # job's own "found" guard skip the work.
       - id: read
         run: |
-          echo "matrix=$(jq -c '{ocp: (.targets | keys)}' ocp-targets.json)" >> "$GITHUB_OUTPUT"
+          TAG=$(git tag -l 'v*.*.*' --sort=-v:refname | head -n1)
+          if [ -n "$TAG" ]; then
+            echo "Reading targets from released tag ${TAG}"
+            JSON=$(git show "${TAG}:ocp-targets.json")
+          else
+            echo "No release tag found — falling back to the checked-out ocp-targets.json"
+            JSON=$(cat ocp-targets.json)
+          fi
+          echo "matrix=$(printf '%s' "$JSON" | jq -c '{ocp: (.targets | keys)}')" >> "$GITHUB_OUTPUT"
+          printf '%s' "$JSON" | jq -r '"Rebuilding: " + (.targets | keys | join(", "))'
 
   rebuild:
     needs: targets

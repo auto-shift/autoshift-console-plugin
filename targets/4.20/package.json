@@ -1,6 +1,5 @@
 {
   "name": "autoshift-console-ocp4.20",
-  "version": "0.0.1",
   "description": "OpenShift 4.20 module-federation contract for autoshift-console",
   "private": true,
   "type": "module",
