@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
@@ -9,6 +10,26 @@ import playwright from 'eslint-plugin-playwright';
 import jest from 'eslint-plugin-jest';
 import testingLibrary from 'eslint-plugin-testing-library';
 import globals from 'globals';
+
+/*
+ * Type-aware linting needs a TypeScript project, and there is one per OpenShift target rather
+ * than one at the root: the type environment genuinely differs between them (@types/react 17
+ * against 18, react-router 5 against 7), and the packages themselves live in
+ * targets/<minor>/node_modules. Linting always runs from the repo root, so a plain relative read
+ * is enough to find the registry.
+ */
+const { targets } = JSON.parse(fs.readFileSync('ocp-targets.json', 'utf-8')) as {
+  targets: Record<string, { shared: { react: string } }>;
+};
+const minors = Object.keys(targets);
+const target = process.env.OCP_TARGET ?? minors[minors.length - 1];
+if (!targets[target]) {
+  throw new Error(`unknown OCP_TARGET '${target}'; declared targets: ${minors.join(', ')}`);
+}
+
+// 'detect' reads react's package.json by resolving it from here, and react is not installed at
+// the root — so it has to be stated. The range is the one the target's console provides.
+const reactVersion = targets[target].shared.react.replace(/^[^\d]*/, '');
 
 export default tseslint.config(
   {
@@ -22,7 +43,12 @@ export default tseslint.config(
   importX.flatConfigs.typescript,
   {
     settings: {
-      'import-x/resolver-next': [createTypeScriptImportResolver()],
+      // Defaults to the root tsconfig, which maps nothing: react, PatternFly and the SDK all live
+      // in the target's tree, and '@compat/router' only exists there. Without this every one of
+      // those imports is reported unresolved.
+      'import-x/resolver-next': [
+        createTypeScriptImportResolver({ project: [`./targets/${target}/tsconfig.json`] }),
+      ],
     },
   },
   {
@@ -38,7 +64,8 @@ export default tseslint.config(
     languageOptions: {
       globals: globals.browser,
       parserOptions: {
-        projectService: true,
+        project: [`./targets/${target}/tsconfig.json`],
+        tsconfigRootDir: import.meta.dirname,
         ecmaFeatures: {
           jsx: true,
         },
@@ -46,7 +73,7 @@ export default tseslint.config(
     },
     settings: {
       react: {
-        version: 'detect',
+        version: reactVersion,
       },
     },
   },

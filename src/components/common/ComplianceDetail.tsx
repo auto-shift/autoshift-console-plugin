@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Content, Label, SearchInput, ToggleGroup, ToggleGroupItem } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link } from '@compat/router';
 import type { FC } from 'react';
 import type { PolicyCheck } from '../../types/autoshift';
 import { acmPolicyResultsUrl } from '../../lib/acm';

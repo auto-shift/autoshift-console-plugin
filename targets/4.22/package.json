@@ -1,0 +1,26 @@
+{
+  "name": "autoshift-console-ocp4.22",
+  "version": "0.0.1",
+  "description": "OpenShift 4.22 module-federation contract for autoshift-console",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/auto-shift/autoshift-console-plugin.git"
+  },
+  "devDependencies": {
+    "@openshift-console/dynamic-plugin-sdk": "4.22-latest",
+    "@openshift-console/dynamic-plugin-sdk-webpack": "4.22-latest",
+    "@patternfly/react-core": "^6.6.0",
+    "@patternfly/react-icons": "^6.6.0",
+    "@patternfly/react-table": "^6.6.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.3.28",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "~16.5.8",
+    "react-router": "~7.13.1"
+  },
+  "packageManager": "yarn@4.17.1"
+}

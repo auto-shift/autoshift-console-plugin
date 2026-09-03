@@ -62,18 +62,22 @@ jobs:
           # couple of seconds, so the cache buys little and its keying has broken CI before.
           package-manager-cache: false
 
-      - name: Select OpenShift target
-        run: ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
-
+      # Lint, test and build run here as a release gate; the image below builds its own trees
+      # from the same committed lockfiles.
       - name: Install and build
+        env:
+          OCP_TARGET: ${{ matrix.ocp }}
         run: |
-          YARN="node $(awk '/yarnPath:/{print $2}' .yarnrc.yml)"
-          # --immutable: yarn.lock is committed, so this builds exactly the reviewed tree.
-          $YARN install --immutable
-          $YARN lint
-          $YARN test
+          YARN_REL="$(awk '/yarnPath:/{print $2}' .yarnrc.yml)"
+          # --immutable on both trees: the toolchain and this target's module-federation
+          # contract are each pinned by a committed lockfile, so this builds exactly what was
+          # reviewed.
+          node "$YARN_REL" install --immutable
+          (cd "targets/${{ matrix.ocp }}" && node "../../$YARN_REL" install --immutable)
+          node "$YARN_REL" lint
+          node "$YARN_REL" test
           # The SDK validator fails here if the bundle does not match the target's contract.
-          $YARN build
+          node "$YARN_REL" build
 
       - uses: docker/setup-buildx-action@v4
 
@@ -87,6 +91,7 @@ jobs:
           load: true
           tags: ${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}
           build-args: |
+            OCP_TARGET=${{ matrix.ocp }}
             PLUGIN_VERSION=${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}
             PLUGIN_REVISION=${{ github.sha }}
 

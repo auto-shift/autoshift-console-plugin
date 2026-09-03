@@ -12,7 +12,7 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { ExclamationCircleIcon, ExclamationTriangleIcon } from '@patternfly/react-icons';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link } from '@compat/router';
 import type { FC, ReactNode } from 'react';
 import type { ClusterView, Stack } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';

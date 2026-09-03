@@ -115,13 +115,15 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Select OpenShift target and build assets
+      - name: Build assets for OpenShift ${{ matrix.ocp }}
         if: steps.tag.outputs.found == 'true'
+        env:
+          OCP_TARGET: ${{ matrix.ocp }}
         run: |
-          ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
-          YARN="node $(awk '/yarnPath:/{print $2}' .yarnrc.yml)"
-          $YARN install --immutable
-          $YARN build
+          YARN_REL="$(awk '/yarnPath:/{print $2}' .yarnrc.yml)"
+          node "$YARN_REL" install --immutable
+          (cd "targets/${{ matrix.ocp }}" && node "../../$YARN_REL" install --immutable)
+          node "$YARN_REL" build
 
       - uses: docker/setup-buildx-action@v4
         if: steps.tag.outputs.found == 'true'
@@ -136,6 +138,7 @@ jobs:
           load: true
           tags: ${{ env.IMAGE }}:rebuild-ocp${{ matrix.ocp }}
           build-args: |
+            OCP_TARGET=${{ matrix.ocp }}
             PLUGIN_VERSION=${{ steps.tag.outputs.tag }}-ocp${{ matrix.ocp }}
             PLUGIN_REVISION=${{ github.sha }}
 

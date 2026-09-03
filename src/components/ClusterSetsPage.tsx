@@ -16,7 +16,7 @@ import {
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link } from '@compat/router';
 import type { FC } from 'react';
 import type { ClusterSetView, FeatureView } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
