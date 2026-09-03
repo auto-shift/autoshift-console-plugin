@@ -1,57 +1,84 @@
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { load } from 'js-yaml';
 
 const ROOT = path.resolve(__dirname, '..');
 
-const targets = Object.keys(
-  (
-    JSON.parse(fs.readFileSync(path.join(ROOT, 'ocp-targets.json'), 'utf-8')) as {
-      targets: Record<string, unknown>;
-    }
-  ).targets,
-);
+const readJson = (p: string) => JSON.parse(fs.readFileSync(path.join(ROOT, p), 'utf-8')) as never;
+
+const registry = readJson('ocp-targets.json') as {
+  targets: Record<
+    string,
+    { sdk: string; shared: Record<string, string>; pins: Record<string, string> }
+  >;
+};
+const targets = Object.keys(registry.targets);
+
+const rootPkg = readJson('package.json') as { devDependencies: Record<string, string> };
 
 const dependabot = load(fs.readFileSync(path.join(ROOT, '.github/dependabot.yml'), 'utf-8')) as {
   updates?: { 'package-ecosystem'?: string; directory?: string }[];
 };
-
-const npmUpdatesEnabled = (dependabot.updates ?? []).some(
-  (u) => u['package-ecosystem'] === 'npm' && u.directory === '/',
-);
-
-/** Lockfiles committed at the repo root, e.g. yarn.lock or yarn-4.23.lock. */
-const lockfiles = fs.readdirSync(ROOT).filter((f) => /^yarn(-.+)?\.lock$/.test(f));
+const npmDirectories = (dependabot.updates ?? [])
+  .filter((u) => u['package-ecosystem'] === 'npm')
+  .map((u) => u.directory);
 
 /*
- * A second OpenShift target needs a second pinned dependency tree, and Dependabot maintains
- * exactly one: it updates package.json and yarn.lock and nothing else. Any other lockfile drifts
- * with no bot, no build and no test watching it — and the first person to notice is whoever
- * deploys against that target and finds every route 404ing, with nothing in any server log.
+ * A plugin bundle cannot span OpenShift releases: the console supplies react, react-router and
+ * react-i18next as shared singletons and their versions change between releases. Getting it wrong
+ * does not fail the build — the pod serves assets, the console skips the plugin, and every route
+ * 404s with nothing in any server-side log. So each target owns a pinned dependency tree, and
+ * these tests assert the machinery that keeps those trees honest.
  *
- * This is the cheap half of the fix: it does not make multi-target work, it makes breaking the
- * constraint loud. Without it, adding a target to ocp-targets.json fails later and obscurely, in
- * `yarn install --immutable`, as a lockfile-drift error that does not mention targets at all.
- *
- * The real fix is per-target lockfiles plus a per-target Dependabot config — worth doing when
- * multi-target support is actually needed, and not before.
+ * The layout is forced rather than chosen. Yarn 4 removed the `lockfileFilename` setting, so
+ * per-target lockfiles cannot sit side by side at the repo root; a directory each is the only
+ * thing Yarn 4 supports, and the only unit Dependabot can update.
  */
 describe('OpenShift build targets', () => {
-  it('has a maintained lockfile for every target', () => {
-    // Past one target, Dependabot can no longer keep every tree current on its own. Either each
-    // target carries its own lockfile AND npm updates are off (every lockfile then refreshed by
-    // hand on each bump), or the repo stays on a single target. Both switched on is the state that
-    // goes stale silently, and it is the state this asserts against.
-    const everyTargetIsMaintained =
-      targets.length <= 1 || (lockfiles.length === targets.length && !npmUpdatesEnabled);
+  it.each(targets)('%s has a directory with its own pinned tree', (minor) => {
+    const dir = path.join(ROOT, 'targets', minor);
+    const present = ['package.json', 'yarn.lock', 'tsconfig.json', 'compat/router.ts'].filter((f) =>
+      fs.existsSync(path.join(dir, f)),
+    );
+    expect(present).toEqual(['package.json', 'yarn.lock', 'tsconfig.json', 'compat/router.ts']);
+  });
 
-    // The inputs ride along in the assertion so a failure names the state it found.
-    expect({ targets, lockfiles, npmUpdatesEnabled, everyTargetIsMaintained }).toEqual({
-      targets,
-      lockfiles,
-      npmUpdatesEnabled,
-      everyTargetIsMaintained: true,
-    });
+  /*
+   * Without this, a target's tree drifts with no bot, no build and no test watching it — and the
+   * first person to notice is whoever deploys against that target and finds every route 404ing.
+   * The root entry covers the toolchain; the per-directory ones cover what actually ships.
+   */
+  it('has a Dependabot npm entry for the toolchain and every target', () => {
+    expect(npmDirectories.sort()).toEqual(['/', ...targets.map((m) => `/targets/${m}`)].sort());
+  });
+
+  /*
+   * ConsoleRemotePlugin derives the bundle's shared-module set from the dependencies declared in
+   * the target's package.json, not from what the source imports. A contract package left in the
+   * root toolchain tree would resolve ahead of nothing at all — but it would also let someone
+   * bump react at the root and believe they had changed what ships.
+   */
+  it('keeps every contract package out of the root toolchain tree', () => {
+    const contract = new Set(
+      Object.values(registry.targets).flatMap((t) => [
+        ...Object.keys(t.shared),
+        ...Object.keys(t.pins),
+      ]),
+    );
+    const leaked = Object.keys(rootPkg.devDependencies).filter((d) => contract.has(d));
+    expect(leaked).toEqual([]);
+  });
+
+  /*
+   * The generator owns the pins, the SDK line and the router shim in every target directory.
+   * Running it in --check mode here means a hand edit, or an ocp-targets.json change without a
+   * re-run, fails as a named mismatch rather than as an unexplained shared-module error later.
+   */
+  it('has targets/ in sync with ocp-targets.json', () => {
+    expect(() =>
+      execFileSync('node', ['scripts/sync-targets.mjs', '--check'], { cwd: ROOT }),
+    ).not.toThrow();
   });
 
   it('builds every declared target in CI', () => {

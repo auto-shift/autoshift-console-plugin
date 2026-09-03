@@ -29,6 +29,8 @@ BRIDGE_BASE_ADDRESS="$(oc get consoles.config.openshift.io cluster -o jsonpath='
 export BRIDGE_BASE_ADDRESS
 
 echo "Install dependencies"
+# Playwright drives a real console, so only the root toolchain is needed here — the plugin under
+# test is whatever is deployed to the cluster, not a local build.
 if [ ! -d node_modules ]; then
   yarn install --immutable
 fi

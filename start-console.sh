@@ -2,17 +2,37 @@
 
 set -euo pipefail
 
-# Pinned to the OpenShift release this plugin targets (see ocp-targets.json), NOT :latest.
-# :latest tracks master, which supplies a different React / react-router than 4.22 — so a plugin
-# that is broken on a real 4.22 cluster can still look perfectly fine locally.
-CONSOLE_IMAGE=${CONSOLE_IMAGE:="quay.io/openshift/origin-console:4.22"}
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Which target to run the console for. Defaults to the newest in ocp-targets.json, matching
+# scripts/ocp.sh, so `yarn start` and `yarn start-console` agree unless OCP_TARGET says otherwise.
+if [ -z "${OCP_TARGET:-}" ]; then
+  OCP_TARGET=$(node -e "
+    const t = Object.keys(require('$ROOT/ocp-targets.json').targets);
+    process.stdout.write(t[t.length - 1]);
+  ")
+fi
+
+# Pinned to the OpenShift release being targeted, NOT :latest. :latest tracks master, which
+# supplies a different React / react-router than any released console — so a plugin that is broken
+# on a real cluster can still look perfectly fine locally. Testing a 4.20 build against a 4.22
+# console is the same mistake by a smaller margin, which is why this follows the target.
+CONSOLE_IMAGE=${CONSOLE_IMAGE:=$(node -e "
+  const { targets } = require('$ROOT/ocp-targets.json');
+  const spec = targets['$OCP_TARGET'];
+  if (!spec) {
+    console.error(\"unknown OCP_TARGET '$OCP_TARGET'; declared: \" + Object.keys(targets).join(', '));
+    process.exit(1);
+  }
+  process.stdout.write(spec.consoleImage);
+")}
 CONSOLE_PORT=${CONSOLE_PORT:=9000}
 CONSOLE_IMAGE_PLATFORM=${CONSOLE_IMAGE_PLATFORM:="linux/amd64"}
 
 # Plugin metadata is declared in package.json
 PLUGIN_NAME=${npm_package_consolePlugin_name}
 
-echo "Starting local OpenShift console..."
+echo "Starting local OpenShift console for target ${OCP_TARGET}..."
 
 BRIDGE_USER_AUTH="disabled"
 BRIDGE_K8S_MODE="off-cluster"

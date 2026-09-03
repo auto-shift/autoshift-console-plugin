@@ -13,37 +13,106 @@ updates:
       interval: weekly
     labels: [security, dependencies]
 
+  # The build toolchain — webpack, eslint, jest, typescript. Target-independent, so it lives here
+  # under one lockfile and one set of update PRs.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     labels: [dependencies]
     open-pull-requests-limit: 10
-    # The console supplies these as shared singletons via module federation, so their versions are
-    # dictated by the OpenShift release being targeted — they are pinned in ocp-targets.json and
-    # applied by scripts/set-ocp-target.sh. A Dependabot bump here does not upgrade anything; it
-    # breaks the contract and the SDK validator fails the build ("Console provides shared module X
-    # but plugin uses Y"). Change the OpenShift target instead.
     ignore:
-      - dependency-name: react
-      - dependency-name: react-dom
-      - dependency-name: react-router
-      - dependency-name: react-i18next
-      - dependency-name: '@types/react'
-      - dependency-name: '@types/react-dom'
-      - dependency-name: '@openshift-console/dynamic-plugin-sdk'
-      - dependency-name: '@openshift-console/dynamic-plugin-sdk-webpack'
       # CI and the Dockerfile build stage both run Node 22; types describing a newer runtime would
       # let code past the compiler that fails at runtime. Bump alongside the Node version, not apart.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
     groups:
+      dev-tooling:
+        patterns: ['eslint*', 'typescript*', '@typescript-eslint/*', 'prettier*', 'stylelint*', 'jest*', '@swc/*', 'webpack*']
+
+  # OpenShift 4.20: the module-federation contract plus everything that ends up in the bundle.
+  # Dependabot owns PatternFly here; the react / react-router / react-i18next / SDK versions are
+  # dictated by what the 4.20 console shares, so they are ignored below and pinned in
+  # ocp-targets.json instead. A bump here would not upgrade anything — it would break the contract
+  # and the SDK validator would fail the build ("Console provides shared module X but plugin uses
+  # Y"). Add an OpenShift target instead.
+  - package-ecosystem: npm
+    directory: /targets/4.20
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-router
+      - dependency-name: react-router-dom
+      - dependency-name: react-router-dom-v5-compat
+      - dependency-name: react-i18next
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-dom'
+      - dependency-name: '@testing-library/react'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk-webpack'
+    groups:
       patternfly:
         patterns: ['@patternfly/*']
-      openshift-sdk:
-        patterns: ['@openshift-console/*']
-      dev-tooling:
-        patterns: ['eslint*', 'typescript*', '@typescript-eslint/*', 'prettier*', 'stylelint*', 'jest*', '@swc/*', '@rspack/*']
+
+  # OpenShift 4.21: the module-federation contract plus everything that ends up in the bundle.
+  # Dependabot owns PatternFly here; the react / react-router / react-i18next / SDK versions are
+  # dictated by what the 4.21 console shares, so they are ignored below and pinned in
+  # ocp-targets.json instead. A bump here would not upgrade anything — it would break the contract
+  # and the SDK validator would fail the build ("Console provides shared module X but plugin uses
+  # Y"). Add an OpenShift target instead.
+  - package-ecosystem: npm
+    directory: /targets/4.21
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-router
+      - dependency-name: react-router-dom
+      - dependency-name: react-router-dom-v5-compat
+      - dependency-name: react-i18next
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-dom'
+      - dependency-name: '@testing-library/react'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk-webpack'
+    groups:
+      patternfly:
+        patterns: ['@patternfly/*']
+
+  # OpenShift 4.22: the module-federation contract plus everything that ends up in the bundle.
+  # Dependabot owns PatternFly here; the react / react-router / react-i18next / SDK versions are
+  # dictated by what the 4.22 console shares, so they are ignored below and pinned in
+  # ocp-targets.json instead. A bump here would not upgrade anything — it would break the contract
+  # and the SDK validator would fail the build ("Console provides shared module X but plugin uses
+  # Y"). Add an OpenShift target instead.
+  - package-ecosystem: npm
+    directory: /targets/4.22
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-router
+      - dependency-name: react-router-dom
+      - dependency-name: react-router-dom-v5-compat
+      - dependency-name: react-i18next
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-dom'
+      - dependency-name: '@testing-library/react'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk-webpack'
+    groups:
+      patternfly:
+        patterns: ['@patternfly/*']
 
   - package-ecosystem: github-actions
     directory: /

@@ -14,7 +14,7 @@ This is a **template repository** for creating OpenShift Console dynamic plugins
 **Key Technologies:**
 - TypeScript + React 18
 - PatternFly 6 (UI component library)
-- Rspack with Module Federation
+- webpack with Module Federation
 - react-i18next for internationalization
 - Playwright for e2e testing
 - Helm for deployment
@@ -29,7 +29,7 @@ This plugin uses module federation to load at runtime into the OpenShift Console
 
 - `console-extensions.json`: Declares what the plugin adds to console (routes, nav items, etc.)
 - `package.json` `consolePlugin` section: Plugin metadata and exposed modules mapping
-- `rspack.config.ts`: Configures module federation and build
+- `webpack.config.ts`: Configures module federation and build
 
 **Critical:** Any component referenced in `console-extensions.json` must have a corresponding entry in `package.json` under `consolePlugin.exposedModules`.
 
@@ -50,6 +50,65 @@ This plugin uses module federation to load at runtime into the OpenShift Console
 - **Prefix all custom classes** with plugin name (e.g., `autoshift-console__nice`)
 
 Don't disable these rules without understanding they protect against layout breakage!
+
+## OpenShift Build Targets
+
+The plugin is built once per OpenShift release, declared in `ocp-targets.json`. This is the single
+most important thing to understand before changing dependencies or the build.
+
+The console supplies `react`, `react-router` and `react-i18next` to plugins as **shared
+singletons** via module federation, and their versions change between releases — most sharply at
+4.22, where the console moved React 17 to 18. A bundle built against the wrong set does not fail
+the build. It loads and then fails silently: the pod serves assets, the console skips the plugin,
+and every route 404s with nothing in any server-side log. Assume any "the plugin just doesn't
+appear" report is this until proven otherwise.
+
+### Layout
+
+```
+package.json          build toolchain (webpack, eslint, jest) + the canonical consolePlugin block
+yarn.lock             one Dependabot-maintained toolchain tree
+ocp-targets.json      the target registry — single source of truth
+targets/<minor>/
+  package.json        the module-federation contract + everything bundled (react, PatternFly, SDK)
+  yarn.lock           that target's pinned tree
+  tsconfig.json       generated — paths/typeRoots into this directory
+  compat/router.ts    generated — re-exports Link/useSearchParams from what this console shares
+src/                  shared source, built once per target
+```
+
+Yarn 4 removed `lockfileFilename`, so per-target lockfiles cannot live side by side at the root; a
+directory each is the only layout Yarn 4 supports, and the only unit Dependabot can update.
+
+### Rules
+
+- **Never hand-edit anything under `targets/`.** Change `ocp-targets.json`, then run
+  `node scripts/sync-targets.mjs`. `src/ocp-targets.spec.ts` runs it in `--check` mode.
+- **Never add react, react-router, react-i18next, PatternFly or the SDK to the root
+  `package.json`.** They belong to a target. The guard spec fails if one leaks to the root.
+- **Select a target with `OCP_TARGET`** (defaults to the newest declared). `yarn build`, `yarn
+  test` and `yarn lint` all read it; `scripts/ocp.sh` runs the build from the target directory
+  because `ConsoleRemotePlugin` reads `package.json` from the process cwd.
+- **Import routing from `@compat/router`, never from `react-router` directly.** `react-router` 5.3
+  exports neither `Link` nor `useSearchParams`; on 4.20/4.21 the console shares
+  `react-router-dom-v5-compat` instead. Each target's `compat/router.ts` names the shared package
+  literally, because module federation matches on the request string — aliasing it would bundle a
+  private copy of a singleton.
+- **A new React major means checking the test tooling too.** `@testing-library/react` 16 requires
+  `react-dom/client`, which does not exist on React 17, so `setup-tests.ts` takes `configure` from
+  `@testing-library/dom` instead and the React wrapper is pinned per target.
+
+### Adding a target
+
+1. Add an entry to `ocp-targets.json` (`sdk`, `shared`, `pins`, `routerModule`, `consoleImage`,
+   `pluginAPI`). Verify `shared` against the SDK's own peerDependencies:
+   `npm view @openshift-console/dynamic-plugin-sdk@<version> peerDependencies`.
+2. `node scripts/sync-targets.mjs`
+3. Add an npm entry for `/targets/<minor>` to `.github/dependabot.yml`.
+4. `(cd targets/<minor> && yarn install)` then `OCP_TARGET=<minor> yarn build`.
+
+The CI, release and rebuild matrices are generated from `ocp-targets.json`, so no workflow edit is
+needed. A contract mismatch is reported as "Console provides shared module X but plugin uses Y".
 
 ## Internationalization (i18n)
 
@@ -78,7 +137,7 @@ src/
 console-extensions.json # Plugin extension declarations
 package.json           # Plugin metadata in consolePlugin section
 tsconfig.json          # TypeScript config (strict: false currently)
-rspack.config.ts      # Module federation + build config
+webpack.config.ts     # Module federation + build config (shared by every target)
 locales/               # i18n translation files
 charts/                # Helm chart for deployment
 integration-tests/     # Playwright e2e tests
@@ -87,10 +146,12 @@ integration-tests/     # Playwright e2e tests
 ## Development Workflow
 
 ### Local Development
-1. `yarn install` - install dependencies
-2. `yarn start` - starts dev server on port 9001 with CORS
-3. `yarn start-console` - runs OpenShift console in container (requires cluster login)
-4. Navigate to http://localhost:9000/example
+1. `yarn install` - install the root toolchain
+2. `(cd targets/<minor> && yarn install)` - install that target's contract tree
+3. `export OCP_TARGET=<minor>` - defaults to the newest declared target
+4. `yarn start` - starts dev server on port 9001 with CORS
+5. `yarn start-console` - runs the console for that target in a container (requires cluster login)
+6. Navigate to http://localhost:9000/autoshift
 
 ### Code Quality
 - `yarn lint` - runs eslint, prettier, and stylelint (with --fix)
@@ -183,8 +244,9 @@ helm upgrade -i my-plugin charts/openshift-console-plugin \
 3. **CSS class prefixes prevent style conflicts** - always prefix with plugin name
 4. **Module federation requires exact module mapping** - `exposedModules` must match `$codeRef` values
 5. **PatternFly CSS variables only** - hex colors break dark mode
-6. **No rspack HMR for extensions** - changes to `console-extensions.json` require restart
-7. **React 18** - matches console's React version
+6. **No HMR for extensions** - changes to `console-extensions.json` require restart
+7. **React version follows the target** - 18 on 4.22, 17 on 4.20/4.21. It is not a free choice;
+   the console provides it as a shared singleton. See "OpenShift Build Targets" above.
 
 ## Extension Points
 

@@ -125,12 +125,26 @@ between releases — most sharply at 4.22, where the console moved React 17 to 1
 for the wrong release loads and then fails silently: the pod serves assets, the console skips the
 plugin, and every route 404s with nothing in any server-side log.
 
-Pick a target before installing — it rewrites the shared-module pins and the declared `pluginAPI`
-range in `package.json`:
+| Target | React | Router shared by the console | Image tag |
+| --- | --- | --- | --- |
+| 4.20 | 17 | `react-router-dom-v5-compat` | `:ocp4.20` |
+| 4.21 | 17 | `react-router-dom-v5-compat` | `:ocp4.21` |
+| 4.22 | 18 | `react-router` | `:ocp4.22` |
+
+The repo is split along that axis. The build toolchain is target-independent and lives at the
+root; everything that ends up in the bundle — react, PatternFly, the SDK — lives in
+`targets/<minor>/` with its own `yarn.lock`, so each shipped image is built from a reviewed,
+pinned tree. Yarn 4 removed `lockfileFilename`, so a directory each is the only layout that can
+hold one lockfile per target; it is also the only unit Dependabot can update, which is why every
+target has its own npm entry in `.github/dependabot.yml`.
+
+Two installs, then pick a target with `OCP_TARGET` (it defaults to the newest declared):
 
 ```bash
-./scripts/set-ocp-target.sh 4.22
-node .yarn/releases/yarn-4.17.1.cjs install --immutable
+node .yarn/releases/yarn-4.17.1.cjs install --immutable          # toolchain
+(cd targets/4.22 && node ../../.yarn/releases/yarn-4.17.1.cjs install --immutable)
+
+export OCP_TARGET=4.22
 node .yarn/releases/yarn-4.17.1.cjs start        # plugin dev server on :9001
 
 oc login <your-autoshift-hub>
@@ -150,17 +164,20 @@ node .yarn/releases/yarn-4.17.1.cjs build   # production bundle
 node .yarn/releases/yarn-4.17.1.cjs i18n    # re-extract locales after changing strings
 ```
 
-`yarn.lock` is committed, so Dependabot maintains it and CI's `--immutable` install means
-something. That holds only while there is **one** target: two targets need two pinned dependency
-trees, and Dependabot updates `package.json` + `yarn.lock` and nothing else, so a second lockfile
-would silently go stale and fail every build. `ocp-targets.json` records the choice that has to be
-made if 4.23 is added.
+`react-router` 5.3 exports neither `Link` nor `useSearchParams`, so components import them from
+`@compat/router`, which each target directory supplies as a one-line re-export of whatever that
+console shares. The import has to name the shared package literally — module federation matches on
+the request string, so aliasing it would bundle a private copy of a singleton.
 
-`src/ocp-targets.spec.ts` is what stops that being silent. Add a second target and it fails in
-`yarn test` naming the constraint, instead of surfacing later as an unexplained lockfile-drift
-error inside `yarn install --immutable`. It does not make multi-target work — it makes breaking the
-single-target assumption loud. Satisfying it means a lockfile per target *and* npm updates switched
-off in `.github/dependabot.yml`, refreshed by hand on each bump.
+Nothing in `targets/` is hand-edited. Add or change a release in `ocp-targets.json`, then:
+
+```bash
+node scripts/sync-targets.mjs               # rewrites targets/<minor>/
+```
+
+`src/ocp-targets.spec.ts` runs that in `--check` mode and asserts every target has a directory, a
+lockfile and a Dependabot entry — so a forgotten re-run fails `yarn test` by name rather than
+surfacing later as an unexplained shared-module mismatch on a cluster.
 
 Unit tests cover the analytical core — provenance derivation, label merge, catalog resolution — in
 `src/lib/*.spec.ts`. That logic mirrors AutoShift's own merge semantics, so it is the part most

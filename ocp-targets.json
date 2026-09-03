@@ -1,37 +1,103 @@
 {
   "_comment": [
-    "OpenShift releases this plugin is built for, one image per entry.",
+    "OpenShift releases this plugin is built for, one image per entry. This file is the single",
+    "source of truth: the CI, release and rebuild matrices are generated from it, and",
+    "scripts/sync-targets.mjs writes each entry into targets/<minor>/.",
     "",
-    "A single bundle cannot span releases: the console supplies react, react-router and",
-    "react-i18next as shared singletons, and those versions change between releases \u2014 most sharply",
-    "at 4.22, where the console moved React 17 -> 18. A plugin built against the wrong set loads and",
-    "then fails silently: the pod serves assets, the console skips the plugin, and every route 404s",
-    "with nothing in any server-side log.",
+    "A single bundle cannot span releases. The console supplies react, react-router and",
+    "react-i18next as shared singletons via module federation, and those versions change between",
+    "releases - most sharply at 4.22, where the console moved React 17 -> 18. A plugin built",
+    "against the wrong set loads and then fails silently: the pod serves assets, the console skips",
+    "the plugin, and every route 404s with nothing in any server-side log.",
     "",
-    "Only 4.22 is built today. 4.23's SDK is still 4.23.0-prerelease.5, so its shared-module",
-    "contract can change before GA. Adding it is a data change here and the CI/release matrices",
-    "pick it up with no workflow edit — but it also forces the lockfile question back open, and",
-    "that is the expensive part. A second target needs a second pinned dependency tree, and",
-    "Dependabot cannot maintain two lockfiles behind one package.json: it updates package.json and",
-    "yarn.lock only, so any other lockfile goes stale and every `yarn install --immutable` fails.",
-    "So when 4.23 is added, either restore per-target lockfiles AND disable the npm ecosystem in",
-    ".github/dependabot.yml (refreshing every lockfile by hand on each bump), or keep npm updates",
-    "automated and drop back to one target. Do not leave both switched on.",
+    "The repo is split along that axis. Build tooling - webpack, eslint, jest, typescript - is",
+    "target-independent and lives in the root package.json under one Dependabot-maintained",
+    "lockfile. Everything that ends up in the bundle, or that ConsoleRemotePlugin reads from the",
+    "process cwd, gets a directory each under targets/ with its own lockfile, so every shipped",
+    "image is built from a reviewed, pinned tree under `yarn install --immutable`.",
     "",
-    "'sdk' is the SDK line whose validator enforces that release's contract; 'shared' are the",
-    "versions it expects. Verify a new entry with:",
-    "  ./scripts/set-ocp-target.sh <minor> && yarn install && yarn build",
-    "A mismatch is reported as 'Console provides shared module X but plugin uses Y'."
+    "Yarn 4 removed the `lockfileFilename` setting, so per-target lockfiles cannot sit side by side",
+    "at the repo root - a directory each is the only layout Yarn 4 supports, and also the only one",
+    "Dependabot can maintain, because it keys npm updates on a directory. Every target needs its",
+    "own npm entry in .github/dependabot.yml; src/ocp-targets.spec.ts fails if one is missing.",
+    "",
+    "Field by field:",
+    "  'sdk'          the SDK line whose validator enforces that release's contract.",
+    "  'shared'       the module-federation singletons the console provides. ConsoleRemotePlugin",
+    "                 derives the bundle's shared set from the target's DECLARED dependencies, not",
+    "                 from what the source imports, so a stale entry here changes what the plugin",
+    "                 asks the console to share.",
+    "  'pins'         bundled devDependencies that track the target's React major.",
+    "  'routerModule' the package src/compat re-exports from. react-router 5.3 exports neither Link",
+    "                 nor useSearchParams, so the React 17 releases take them from",
+    "                 react-router-dom-v5-compat, which those consoles share and 4.22 does not.",
+    "  'bundled'      (top level) deps every target needs but whose versions Dependabot owns per",
+    "                 directory. Used only to seed a new target directory.",
+    "",
+    "To add a target: add an entry, run `node scripts/sync-targets.mjs`, add an npm entry to",
+    ".github/dependabot.yml, then install and build it:",
+    "  cd targets/<minor> && yarn install && OCP_TARGET=<minor> yarn --cwd ../.. build",
+    "A mismatch is reported as 'Console provides shared module X but plugin uses Y'.",
+    "",
+    "4.23 is not built yet: its SDK is still 4.23.0-prerelease.5, so the shared-module contract can",
+    "still change before GA."
+  ],
+  "bundled": [
+    "@patternfly/react-core",
+    "@patternfly/react-icons",
+    "@patternfly/react-table"
   ],
   "targets": {
+    "4.20": {
+      "sdk": "4.20-latest",
+      "shared": {
+        "react": "^17.0.2",
+        "react-router": "5.3.x",
+        "react-router-dom": "5.3.x",
+        "react-router-dom-v5-compat": "^6.11.2",
+        "react-i18next": "^11.12.0"
+      },
+      "pins": {
+        "react-dom": "^17.0.2",
+        "@types/react": "^17.0.83",
+        "@testing-library/react": "~12.1.5"
+      },
+      "routerModule": "react-router-dom-v5-compat",
+      "consoleImage": "quay.io/openshift/origin-console:4.20",
+      "pluginAPI": ">=4.20.0-0 <4.21.0-0"
+    },
+    "4.21": {
+      "sdk": "4.21-latest",
+      "shared": {
+        "react": "^17.0.2",
+        "react-router": "5.3.x",
+        "react-router-dom": "5.3.x",
+        "react-router-dom-v5-compat": "^6.11.2",
+        "react-i18next": "^11.12.0"
+      },
+      "pins": {
+        "react-dom": "^17.0.2",
+        "@types/react": "^17.0.83",
+        "@testing-library/react": "~12.1.5"
+      },
+      "routerModule": "react-router-dom-v5-compat",
+      "consoleImage": "quay.io/openshift/origin-console:4.21",
+      "pluginAPI": ">=4.21.0-0 <4.22.0-0"
+    },
     "4.22": {
       "sdk": "4.22-latest",
       "shared": {
         "react": "^18.3.1",
-        "react-dom": "^18.3.1",
         "react-router": "~7.13.1",
         "react-i18next": "~16.5.8"
       },
+      "pins": {
+        "react-dom": "^18.3.1",
+        "@types/react": "^18.3.28",
+        "@testing-library/react": "^16.3.2"
+      },
+      "routerModule": "react-router",
+      "consoleImage": "quay.io/openshift/origin-console:4.22",
       "pluginAPI": ">=4.22.0-0 <4.23.0-0"
     }
   }

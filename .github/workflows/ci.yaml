@@ -46,6 +46,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.targets.outputs.matrix) }}
+    # Selects the contract tree that lint, tests and the build resolve against; scripts/ocp.sh
+    # reads it, and jest refuses to run without it rather than silently testing the wrong tree.
+    env:
+      OCP_TARGET: ${{ matrix.ocp }}
     steps:
       - uses: actions/checkout@v7
 
@@ -58,13 +62,16 @@ jobs:
 
       # The repo vendors its own Yarn release (yarnPath in .yarnrc.yml), so there is nothing to
       # install and no chance of CI using a different package manager version than a developer.
-      - name: Select OpenShift target
-        run: ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
-
-      # --immutable: yarn.lock is committed, so the build uses exactly the reviewed tree and a
-      # dependency change that was not committed fails here instead of shipping.
-      - name: Install dependencies
+      #
+      # Two installs, two lockfiles: the root tree is the target-independent build toolchain,
+      # targets/<minor> is the module-federation contract for this matrix leg. --immutable on both
+      # means a dependency change that was not committed fails here instead of shipping.
+      - name: Install toolchain
         run: node "$(awk '/yarnPath:/{print $2}' .yarnrc.yml)" install --immutable
+
+      - name: Install OpenShift ${{ matrix.ocp }} contract tree
+        working-directory: targets/${{ matrix.ocp }}
+        run: node "../../$(awk '/yarnPath:/{print $2}' ../../.yarnrc.yml)" install --immutable
 
       - name: Lint
         run: node "$(awk '/yarnPath:/{print $2}' .yarnrc.yml)" lint
@@ -75,7 +82,7 @@ jobs:
       # AutoShift gates deployment on config.autoshiftConsole.minOpenShiftVersion; this keeps the
       # plugin's own declared floor visible so the two can be reconciled.
       - name: Report declared OpenShift floor
-        run: echo "target ${{ matrix.ocp }} declares floor $(./check-min-version.sh)"
+        run: echo "target ${{ matrix.ocp }} declares floor $(./check-min-version.sh ${{ matrix.ocp }})"
 
       # The live-cluster fixture is git-ignored, so model.live.spec.ts self-skips here. It only
       # runs for a developer who has captured a snapshot with ./capture-fixture.sh.
@@ -92,18 +99,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          # Left off deliberately. The repo vendors its own Yarn release and the install is a
-          # couple of seconds, so the cache buys little and its keying has broken CI before.
-          package-manager-cache: false
-
-      - name: Select OpenShift target
-        run: ./scripts/set-ocp-target.sh ${{ matrix.ocp }}
-
       - uses: docker/setup-buildx-action@v4
 
+      # The image builds its own dependency trees from the committed lockfiles, so there is no
+      # setup-node or install step here — OCP_TARGET is all the Dockerfile needs.
       - name: Build image
         uses: docker/build-push-action@v7
         with:
@@ -113,6 +112,7 @@ jobs:
           load: true
           tags: autoshift-console-plugin:ci-ocp${{ matrix.ocp }}
           build-args: |
+            OCP_TARGET=${{ matrix.ocp }}
             PLUGIN_VERSION=0.0.0-ci-ocp${{ matrix.ocp }}
             PLUGIN_REVISION=${{ github.sha }}
 

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useSearchParams } from 'react-router';
+import { useSearchParams } from '@compat/router';
 import { useAutoShiftDeployments } from '../../hooks/useAutoShift';
 import type { Deployment } from '../../types/autoshift';
 

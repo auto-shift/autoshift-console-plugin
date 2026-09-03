@@ -18,6 +18,12 @@
 FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:4c44b8f1cfbfc36b900216809eeb6ae49f4f7b90fe1d47d66ab6be1cb5ee58d4 AS build
 USER root
 
+# Which OpenShift release this image is built for. One image per target: the console supplies
+# react, react-router and react-i18next as shared singletons whose versions change between
+# releases, so a bundle built for the wrong one loads and then fails silently. Targets and their
+# pinned trees live in ocp-targets.json and targets/<minor>/.
+ARG OCP_TARGET=4.22
+
 # Playwright is a devDependency used only for e2e; downloading browsers would add ~400MB to a
 # layer that exists purely to run `yarn build`.
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
@@ -25,11 +31,17 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ADD . /usr/src/app
 WORKDIR /usr/src/app
 
-# --immutable fails the build if yarn.lock would change, so CI cannot silently resolve a different
-# dependency tree than the one that was reviewed.
-RUN LOCAL_YARN="node $(awk '/yarnPath:/{print $2}' .yarnrc.yml)" && \
-    $LOCAL_YARN install --immutable && \
-    $LOCAL_YARN build
+# Two installs, two lockfiles: the root tree is the build toolchain, targets/<minor> is the
+# module-federation contract this image ships against. --immutable fails the build if either
+# lockfile would change, so the image cannot be built from a dependency tree nobody reviewed.
+RUN set -eu; \
+    if [ ! -d "targets/${OCP_TARGET}" ]; then \
+      echo "unknown OCP_TARGET '${OCP_TARGET}'; declared: $(ls targets)" >&2; exit 1; \
+    fi; \
+    YARN_REL="$(awk '/yarnPath:/{print $2}' .yarnrc.yml)"; \
+    node "$YARN_REL" install --immutable; \
+    (cd "targets/${OCP_TARGET}" && node "../../$YARN_REL" install --immutable); \
+    OCP_TARGET="${OCP_TARGET}" node "$YARN_REL" build
 
 FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:45e1b68d39cb7e9f8a89f20ba0ab0c6cc7ade04e25d51d14ae75fa77b5320518
 
