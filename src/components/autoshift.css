@@ -174,3 +174,11 @@
   color: inherit;
   text-decoration: none;
 }
+
+/* Label concerns are grouped by ordering alone — a heading row inside a table that already has a
+   header row reads as a competing header. A rule between groups keeps a feature with two dozen
+   labels scannable without claiming to be one. Sibling combinators need a class here: stylelint's
+   selector-max-type forbids a bare tbody + tbody. */
+.autoshift-console__label-group + .autoshift-console__label-group tr:first-child td {
+  border-block-start: 1px solid var(--pf-t--global--border--color--default);
+}
