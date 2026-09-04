@@ -34,7 +34,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.0.0",
     "@types/webpack-env": "^1.18.8",
-    "comment-json": "^4.2.5",
+    "comment-json": "^5.0.0",
     "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^7.1.5",
     "eslint": "^9.39.5",
