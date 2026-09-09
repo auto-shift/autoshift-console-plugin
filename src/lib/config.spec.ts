@@ -129,6 +129,20 @@ describe('groupLabelFamilies', () => {
     expect(families[0].settings.map((s) => s.key)).toEqual(['acs-channel', 'acs-monitoring']);
   });
 
+  /*
+   * A feature whose only label is its own on/off switch has no settings to list. The Labels view
+   * in ClusterSetsPage does not repeat that switch — the row it expands from already carries a
+   * State column — so an empty settings list is what makes it render an empty state rather than
+   * a table with nothing in it. Two of the 39 features in the captured live fixture are this
+   * shape, so it is the ordinary case for a feature that takes no configuration, not an edge one.
+   */
+  it('leaves a toggle-only feature with no settings to list', () => {
+    const families = groupLabelFamilies({ 'autoshift.io/acs': 'true' }, ['acs']);
+    expect(families).toHaveLength(1);
+    expect(families[0].value).toBe('true');
+    expect(families[0].settings).toEqual([]);
+  });
+
   it('groups at the root so an intermediate key never renders twice', () => {
     const families = groupLabelFamilies({
       'autoshift.io/gitops': 'true',

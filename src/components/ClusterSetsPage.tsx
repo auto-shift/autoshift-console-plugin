@@ -21,7 +21,6 @@ import type { FC } from 'react';
 import type { ClusterSetView, FeatureView } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
 import { LABEL_CONCERN_ORDER, formatValue, labelState, toLabelRow } from '../lib/config';
-import type { LabelConcern } from '../lib/config';
 import { acmPolicyResultsUrl } from '../lib/acm';
 import { ArgoLabel } from './common/status';
 
@@ -70,14 +69,21 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
   const [filter, setFilter] = useState('');
   const needle = filter.trim().toLowerCase();
 
-  // Grouped by concern, not printed in one alphabetical run: an unfiltered list of a feature's
-  // labels reads like a ConfigMap dump, and the reader ends up sorting it themselves.
+  /*
+   * Ordered by concern rather than printed in one alphabetical run: an unfiltered list of a
+   * feature's labels reads like a ConfigMap dump, and the reader ends up sorting it themselves.
+   *
+   * The groups are ordering only and carry no headings. A label row inside a table that already
+   * has a header row competes with it, and PatternFly's isSubheader is for nested *column*
+   * headers, not row categories — it also had to claim scope="colgroup" for something describing
+   * a group of rows. The rows say what they are without it: Channel, Version, Catalog and Image
+   * read as a set on their own.
+   *
+   * The feature's own on/off label is deliberately absent. The row this panel expands from
+   * already carries a State column, so repeating it here restated the same value one row later.
+   */
   const labelGroups = useMemo(() => {
-    const raw =
-      feature.value === undefined
-        ? feature.settings
-        : [{ key: feature.name, value: feature.value }, ...feature.settings];
-    const rows = raw
+    const rows = feature.settings
       .map((r) => toLabelRow(feature.name, r.key, r.value))
       .filter(
         (r) =>
@@ -94,15 +100,6 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
 
   const labelRowCount = labelGroups.reduce((n, g) => n + g.rows.length, 0);
 
-  const concernTitle = (concern: LabelConcern): string =>
-    concern === 'toggle'
-      ? t('State')
-      : concern === 'source'
-        ? t('Source and version')
-        : concern === 'storage'
-          ? t('Storage')
-          : t('Other settings');
-
   const configRows = useMemo(
     () =>
       needle ? feature.config.filter((c) => c.path.toLowerCase().includes(needle)) : feature.config,
@@ -117,7 +114,7 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
     [feature.components, needle],
   );
 
-  const labelCount = feature.settings.length + (feature.value === undefined ? 0 : 1);
+  const labelCount = feature.settings.length;
   const empty = (message: string) => (
     <Content component="p" className="autoshift-console__muted">
       {message}
@@ -166,7 +163,9 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
       </div>
 
       {view === 'labels' &&
-        (labelRowCount === 0 ? (
+        (labelCount === 0 ? (
+          empty(t('This feature has no settings beyond its on/off state.'))
+        ) : labelRowCount === 0 ? (
           empty(t('Nothing matched that filter.'))
         ) : (
           <Table variant="compact" aria-label={t('Labels')}>
@@ -177,12 +176,7 @@ const FeatureDetail: FC<{ feature: FeatureView; policyNamespace: string }> = ({
               </Tr>
             </Thead>
             {labelGroups.map((group) => (
-              <Tbody key={group.concern}>
-                <Tr>
-                  <Th colSpan={2} scope="colgroup" isSubheader>
-                    {concernTitle(group.concern)}
-                  </Th>
-                </Tr>
+              <Tbody key={group.concern} className="autoshift-console__label-group">
                 {group.rows.map((row) => (
                   <Tr key={row.key}>
                     {/* The readable name leads; the raw key stays underneath because it is what
