@@ -3436,7 +3436,7 @@ __metadata:
     fork-ts-checker-webpack-plugin: "npm:^9.1.0"
     globals: "npm:^17.12.0"
     i18next: "npm:^26.4.2"
-    i18next-cli: "npm:1.73.1"
+    i18next-cli: "npm:1.73.2"
     jest: "npm:^30.4.2"
     jest-environment-jsdom: "npm:^30.4.1"
     jest-junit: "npm:^17.0.0"
@@ -5971,9 +5971,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-cli@npm:1.73.1":
-  version: 1.73.1
-  resolution: "i18next-cli@npm:1.73.1"
+"i18next-cli@npm:1.73.2":
+  version: 1.73.2
+  resolution: "i18next-cli@npm:1.73.2"
   dependencies:
     "@croct/json5-parser": "npm:^0.2.2"
     "@swc/core": "npm:^1.16.1"
@@ -5989,12 +5989,11 @@ __metadata:
     magic-string: "npm:^1.2.2"
     minimatch: "npm:^10.2.6"
     ora: "npm:^9.4.1"
-    react: "npm:^19.2.8"
     react-i18next: "npm:^17.0.12"
     yaml: "npm:^2.9.0"
   bin:
     i18next-cli: dist/esm/cli.js
-  checksum: 10c0/a22618ab24f7c55ffd3970ab4a166b3b5b52c509da421df333ee56e10334d1e00c4fbb1a75c7771cc2f6b357bea16529570978b153b0a488b296b7ee250fa5e0
+  checksum: 10c0/216644f9a8ad040d52a808a572fabde84de71e2a283778213cb4c4e26ec19ec49740eef5776ec507a9ae403df32301fa34bdfcfc112fb9db7838ca5a87615da5
   languageName: node
   linkType: hard
 
@@ -8657,13 +8656,6 @@ __metadata:
   version: 17.0.2
   resolution: "react-is@npm:17.0.2"
   checksum: 10c0/2bdb6b93fbb1820b024b496042cce405c57e2f85e777c9aabd55f9b26d145408f9f74f5934676ffdc46f3dcff656d78413a6e43968e7b3f92eea35b3052e9053
-  languageName: node
-  linkType: hard
-
-"react@npm:^19.2.8":
-  version: 19.2.8
-  resolution: "react@npm:19.2.8"
-  checksum: 10c0/5f86bdb56426652fd6d989d30a6f2e603c057272c47c9ca3a3fbe190a3a39ee9ccce937d63cfc039717abed1b8891d6a499134bc35311acc07eafdacd86537cd
   languageName: node
   linkType: hard
 
