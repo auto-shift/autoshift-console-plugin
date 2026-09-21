@@ -23,7 +23,7 @@
     "test-e2e-headless": "playwright test"
   },
   "devDependencies": {
-    "@playwright/browser-chromium": "~1.62.1",
+    "@playwright/browser-chromium": "~1.63.0",
     "@playwright/test": "~1.63.0",
     "@swc/core": "^1.15.47",
     "@swc/jest": "^0.2.39",
