@@ -16,28 +16,15 @@
 # nothing to action until Red Hat ships a fix, and the weekly scan of the published image reports
 # those separately. This file is only for a FIXABLE HIGH/CRITICAL that genuinely does not apply.
 
+
+# curl (CVE-2026-8458, CVE-2026-8927): fixed in RHEL as 7.76.1-40.el9_8.7, but no nginx-126 base ships
+# it yet. Drop these entries once the pinned base carries it, rather than extending expired_at.
 vulnerabilities:
-  - id: CVE-2026-63382
+  - id: CVE-2026-8458
     statement: >-
-      libevent 2.1.12-8.el9_4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.1.13-1.el9_8. Nothing in the image reaches it: nginx does not link libevent, and its only consumer is openldap (libldap/liblber), which nginx does not load. The CVEs are in libevent's evhttp/evrpc/evtag code. Remove once the base carries 2.1.13-1.el9_8.
-    expired_at: 2026-10-05
-  - id: CVE-2026-63383
+      curl-minimal/libcurl-minimal 7.76.1-40.el9_8.5 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 7.76.1-40.el9_8.7. Nothing in the running image reaches it: nginx does not link libcurl, and its only consumers are the curl CLI, librepo (dnf) and tpm2-tss, none of which the pod runs. Remove once the base carries 7.76.1-40.el9_8.7.
+    expired_at: 2026-10-06
+  - id: CVE-2026-8927
     statement: >-
-      libevent 2.1.12-8.el9_4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.1.13-1.el9_8. Nothing in the image reaches it: nginx does not link libevent, and its only consumer is openldap (libldap/liblber), which nginx does not load. The CVEs are in libevent's evhttp/evrpc/evtag code. Remove once the base carries 2.1.13-1.el9_8.
-    expired_at: 2026-10-05
-  - id: CVE-2026-63384
-    statement: >-
-      libevent 2.1.12-8.el9_4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.1.13-1.el9_8. Nothing in the image reaches it: nginx does not link libevent, and its only consumer is openldap (libldap/liblber), which nginx does not load. The CVEs are in libevent's evhttp/evrpc/evtag code. Remove once the base carries 2.1.13-1.el9_8.
-    expired_at: 2026-10-05
-  - id: CVE-2026-63385
-    statement: >-
-      libevent 2.1.12-8.el9_4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.1.13-1.el9_8. Nothing in the image reaches it: nginx does not link libevent, and its only consumer is openldap (libldap/liblber), which nginx does not load. The CVEs are in libevent's evhttp/evrpc/evtag code. Remove once the base carries 2.1.13-1.el9_8.
-    expired_at: 2026-10-05
-  - id: CVE-2026-63387
-    statement: >-
-      libevent 2.1.12-8.el9_4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.1.13-1.el9_8. Nothing in the image reaches it: nginx does not link libevent, and its only consumer is openldap (libldap/liblber), which nginx does not load. The CVEs are in libevent's evhttp/evrpc/evtag code. Remove once the base carries 2.1.13-1.el9_8.
-    expired_at: 2026-10-05
-  - id: CVE-2026-63388
-    statement: >-
-      libevent 2.1.12-8.el9_4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.1.13-1.el9_8. Nothing in the image reaches it: nginx does not link libevent, and its only consumer is openldap (libldap/liblber), which nginx does not load. The CVEs are in libevent's evhttp/evrpc/evtag code. Remove once the base carries 2.1.13-1.el9_8.
-    expired_at: 2026-10-05
+      curl-minimal/libcurl-minimal 7.76.1-40.el9_8.5 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 7.76.1-40.el9_8.7. Nothing in the running image reaches it: nginx does not link libcurl, and its only consumers are the curl CLI, librepo (dnf) and tpm2-tss, none of which the pod runs. Remove once the base carries 7.76.1-40.el9_8.7.
+    expired_at: 2026-10-06
