@@ -43,7 +43,7 @@ RUN set -eu; \
     (cd "targets/${OCP_TARGET}" && node "../../$YARN_REL" install --immutable); \
     OCP_TARGET="${OCP_TARGET}" node "$YARN_REL" build
 
-FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:e4df05048ccc30e80d271deb70d06944f2cc9ec20324353ef23cea8950fa9c7b
+FROM registry.access.redhat.com/ubi9/nginx-126:latest@sha256:d09132695e7d560b8682c59a923b11f57578d747b366ff73062dc2dfb72721e6
 
 # Named PLUGIN_* rather than VERSION/REVISION: podman/buildah silently clobbers a build arg
 # called VERSION (verified on 5.4.1 — --build-arg VERSION=v9.9.9 lands in the label as "0"), so
