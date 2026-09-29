@@ -19,7 +19,6 @@ import {
 } from '../k8s/models';
 import { buildFleetModel } from '../lib/model';
 import { toFailure } from '../lib/errors';
-import { CATALOG_CONFIGMAP, CATALOG_NAMESPACE } from '../lib/catalog';
 import type { WatchFailure } from '../lib/errors';
 import type {
   ApplicationResource,
@@ -218,12 +217,6 @@ export const useFleetModel = (
     ns ? { groupVersionKind: PolicyGVK, isList: true, namespace: ns } : null,
   );
 
-  const [catalogConfigMap] = useWatch<ConfigMapResource>({
-    groupVersionKind: ConfigMapGVK,
-    name: CATALOG_CONFIGMAP,
-    namespace: CATALOG_NAMESPACE,
-  });
-
   const model = useMemo<FleetModel | undefined>(
     () =>
       deployment
@@ -240,7 +233,6 @@ export const useFleetModel = (
             placementDecisions,
             placementBindings,
             policies,
-            catalogConfigMap,
           })
         : undefined,
     [
@@ -256,7 +248,6 @@ export const useFleetModel = (
       placementDecisions,
       placementBindings,
       policies,
-      catalogConfigMap,
     ],
   );
 

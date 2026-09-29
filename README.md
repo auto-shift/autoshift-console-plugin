@@ -16,7 +16,7 @@ makes it legible.
 | **Fleet** | `/autoshift/fleet` | What does this deployment configure, and which clusters need attention? |
 | **Cluster Sets** | `/autoshift/cluster-sets` | What does each set turn on, who overrides it, and what reads it? |
 | **Clusters** | `/autoshift/clusters` | Where did each setting come from? |
-| **Stacks** | `/autoshift/stacks` | What is deployed, grouped by application stack? |
+| **Components** | `/autoshift/components` | What is deployed, and is each component synced, healthy and compliant? |
 
 The Clusters page carries the **provenance drawer**: for any setting, the layer chain
 
@@ -80,40 +80,21 @@ string prefixes; doing that produced overlapping junk groups (`cert` beside `cer
 A label matching no known name falls back to its leading token, absorbing same-token groups so
 `acm-source` sits with `acm-observability` rather than beside it.
 
-### Stack grouping (stacks page)
+### Components page
 
-Only the *names* are editorial. Resolution order:
+One row per component, where a component is one Argo CD Application — one policy folder in
+AutoShift (`<release>-<folder>` in both git and OCI mode). Everything on the page is read off live
+objects, so a component added to AutoShift appears as soon as Argo CD syncs it, with no plugin
+release and nothing to keep in step.
 
-1. `ConfigMap/autoshift-console-catalog` in the `autoshift-console` namespace — admin-editable in-cluster
-2. `DEFAULT_STACKS` in `src/lib/catalog.ts`, versioned with the plugin image
-3. anything unnamed **classifies itself** by the API groups its policies manage, so a new AutoShift
-   policy lands somewhere sensible with no plugin rebuild
-4. only a component managing nothing but generic resources reaches **Other**
+There is deliberately no thematic "stack" grouping. Nothing on the cluster says what a component is
+*for*: policy categories carry two distinct values across ~180 policies, namespaces are mostly the
+shared `openshift-operators`, and API groups describe implementation, not purpose. Any stack layer
+therefore has to be a hand-kept list, and AutoShift adds components faster than a list can follow.
 
-The page also offers **By tier** (stable / certified / community), read from each Application's
-`policies/<tier>/<name>` source path — fully derived, no catalog involved.
-
-Thematic names cannot be derived: policy categories carry two distinct values across ~180 policies,
-component names leave most components as singletons, and namespaces are mostly the shared
-`openshift-operators`. That is why a curated list still exists at all.
-
-To regroup without rebuilding:
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: autoshift-console-catalog
-  namespace: autoshift-console
-data:
-  stacks: |
-    stacks:
-      - id: ai
-        name: AI & Accelerators
-        components:
-          - openshift-ai
-          - gpu-operator
-```
+Tier (stable / certified / community) is the one grouping the cluster does carry, read from each
+Application's `policies/<tier>/<name>` source path, so it is offered as a filter alongside a
+name/label search.
 
 ## Development
 
@@ -179,7 +160,7 @@ node scripts/sync-targets.mjs               # rewrites targets/<minor>/
 lockfile and a Dependabot entry — so a forgotten re-run fails `yarn test` by name rather than
 surfacing later as an unexplained shared-module mismatch on a cluster.
 
-Unit tests cover the analytical core — provenance derivation, label merge, catalog resolution — in
+Unit tests cover the analytical core — provenance derivation, label merge, component discovery — in
 `src/lib/*.spec.ts`. That logic mirrors AutoShift's own merge semantics, so it is the part most
 worth pinning down.
 

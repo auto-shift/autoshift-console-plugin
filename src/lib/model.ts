@@ -14,13 +14,11 @@ import {
   buildProvenance,
   buildFeatures,
   lookupKey,
-  managedApiGroups,
   mergeDesiredLabels,
   parseJsonKey,
   parseYamlKey,
 } from './config';
 import type { ConfigLayerInput, PlainObject } from './config';
-import { groupIntoStacks, parseCatalog } from './catalog';
 import type {
   ApplicationResource,
   PolicyCheck,
@@ -139,7 +137,6 @@ export interface FleetModelInputs {
   placementDecisions?: PlacementDecisionResource[];
   placementBindings?: PlacementBindingResource[];
   policies?: PolicyResource[];
-  catalogConfigMap?: ConfigMapResource;
 }
 
 /**
@@ -162,7 +159,6 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
     placementDecisions,
     placementBindings,
     policies,
-    catalogConfigMap,
   } = inputs;
   const release = deployment.release;
 
@@ -408,7 +404,6 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
         name,
         applicationName,
         tier,
-        apiGroups: managedApiGroups(owned.map((p) => p.spec)),
         syncStatus: app.status?.sync?.status,
         healthStatus: app.status?.health?.status,
         gatingLabels: Array.from(gatingLabels).sort((a, b) => a.localeCompare(b)),
@@ -455,6 +450,5 @@ export const buildFleetModel = (inputs: FleetModelInputs): FleetModel => {
     clusters,
     clusterSets,
     components,
-    stacks: groupIntoStacks(components, parseCatalog(catalogConfigMap)),
   };
 };

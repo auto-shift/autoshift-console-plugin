@@ -14,7 +14,7 @@ import { ExclamationCircleIcon, ExclamationTriangleIcon } from '@patternfly/reac
 import { useTranslation } from 'react-i18next';
 import { Link } from '@compat/router';
 import type { FC, ReactNode } from 'react';
-import type { ClusterView, Stack } from '../types/autoshift';
+import type { ClusterView, Component } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
 import { withDeployment } from './common/useSelectedDeployment';
 import { shortRevision } from '../lib/config';
@@ -79,14 +79,12 @@ const Tile: FC<{
 
 type Coverage = 'all' | 'partial' | 'none';
 
-/** How much of a cluster set a stack covers, from live PlacementDecisions. */
-const coverageOf = (stack: Stack, setClusters: string[]): Coverage => {
-  if (setClusters.length === 0 || stack.components.length === 0) {
+/** How much of a cluster set a component covers, from live PlacementDecisions. */
+const coverageOf = (component: Component, setClusters: string[]): Coverage => {
+  if (setClusters.length === 0) {
     return 'none';
   }
-  const covered = setClusters.filter((name) =>
-    stack.components.some((c) => c.clusters.includes(name)),
-  ).length;
+  const covered = setClusters.filter((name) => component.clusters.includes(name)).length;
   if (covered === 0) {
     return 'none';
   }
@@ -133,6 +131,8 @@ const FleetPage: FC = () => {
         const attention = model.clusters.filter(needsAttention);
         const unavailable = model.clusters.filter((c) => !c.available).length;
         const nonCompliant = model.clusters.filter((c) => c.compliance.nonCompliant > 0).length;
+        // A component no Placement selects would be a row of dashes in every column.
+        const placed = model.components.filter((c) => c.clusters.length > 0);
 
         return (
           <>
@@ -155,7 +155,7 @@ const FleetPage: FC = () => {
                 <Tile
                   value={model.components.length}
                   label={countLabel(model.components.length, t('Component'), t('Components'))}
-                  to={withDeployment('/autoshift/stacks', deployment)}
+                  to={withDeployment('/autoshift/components', deployment)}
                 />
               </FlexItem>
               <FlexItem>
@@ -202,31 +202,33 @@ const FleetPage: FC = () => {
             </Flex>
 
             <Card className="autoshift-console__stack">
-              <CardTitle>{t('Stack coverage by cluster set')}</CardTitle>
+              <CardTitle>{t('Component coverage by cluster set')}</CardTitle>
               <CardBody>
-                {model.stacks.length === 0 || model.clusterSets.length === 0 ? (
+                {placed.length === 0 || model.clusterSets.length === 0 ? (
                   <EmptyState titleText={t('Nothing to chart yet')} headingLevel="h4">
                     <EmptyStateBody>
-                      {t('No stacks or cluster sets were discovered for this deployment.')}
+                      {t(
+                        'No placed components or cluster sets were discovered for this deployment.',
+                      )}
                     </EmptyStateBody>
                   </EmptyState>
                 ) : (
-                  <Table variant="compact" aria-label={t('Stack coverage by cluster set')}>
+                  <Table variant="compact" aria-label={t('Component coverage by cluster set')}>
                     <Thead>
                       <Tr>
-                        <Th>{t('Stack')}</Th>
+                        <Th>{t('Component')}</Th>
                         {model.clusterSets.map((set) => (
                           <Th key={set.name}>{set.name}</Th>
                         ))}
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {model.stacks.map((stack) => (
-                        <Tr key={stack.id}>
-                          <Td dataLabel={t('Stack')}>{stack.name}</Td>
+                      {placed.map((component) => (
+                        <Tr key={component.name}>
+                          <Td dataLabel={t('Component')}>{component.name}</Td>
                           {model.clusterSets.map((set) => (
                             <Td key={set.name} dataLabel={set.name}>
-                              <CoverageCell coverage={coverageOf(stack, set.clusters)} />
+                              <CoverageCell coverage={coverageOf(component, set.clusters)} />
                             </Td>
                           ))}
                         </Tr>

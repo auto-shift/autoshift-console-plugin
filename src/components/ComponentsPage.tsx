@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import {
-  Card,
-  CardBody,
-  CardTitle,
   EmptyState,
   EmptyStateBody,
   Label,
   LabelGroup,
+  SearchInput,
   Split,
   SplitItem,
   ToggleGroup,
@@ -16,16 +14,13 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
 import type { FC } from 'react';
-import type { Stack, Component } from '../types/autoshift';
+import type { Component } from '../types/autoshift';
 import { PageFrame } from './common/PageFrame';
 import { ArgoLabel, ComplianceLabel } from './common/status';
 import { shortLabel } from '../lib/config';
-import { groupByTier } from '../lib/catalog';
 import { ComplianceDetail } from './common/ComplianceDetail';
 
 import './autoshift.css';
-
-type Grouping = 'stack' | 'tier';
 
 /**
  * Tier is a maturity signal, so the colours run in that order rather than being merely distinct:
@@ -36,6 +31,14 @@ const TIER_COLOURS: Record<string, 'green' | 'blue' | 'orange' | 'grey'> = {
   stable: 'green',
   certified: 'blue',
   community: 'orange',
+};
+
+/** Maturity order for the tier filter. A tier AutoShift adds later still gets a button, after these. */
+const TIER_ORDER = ['stable', 'certified', 'community'];
+
+const tierRank = (tier: string): number => {
+  const i = TIER_ORDER.indexOf(tier);
+  return i < 0 ? TIER_ORDER.length : i;
 };
 
 const TierLabel: FC<{ tier?: string }> = ({ tier }) => {
@@ -66,16 +69,14 @@ const TierLabel: FC<{ tier?: string }> = ({ tier }) => {
 /** One component row plus its expandable policy-verdict detail. */
 const ComponentRows: FC<{
   component: Component;
-  showTier: boolean;
   rowIndex: number;
   policyNamespace: string;
-}> = ({ component, showTier, rowIndex, policyNamespace }) => {
+}> = ({ component, rowIndex, policyNamespace }) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [expanded, setExpanded] = useState(false);
   const toggle = () => {
     setExpanded(!expanded);
   };
-  const span = showTier ? 8 : 7;
   const placed = component.clusters.length > 0;
 
   // Three distinct situations that all used to read "No policies": nothing is placed, the
@@ -91,11 +92,9 @@ const ComponentRows: FC<{
       <Tr isClickable onRowClick={toggle}>
         <Td expand={{ rowIndex, isExpanded: expanded, onToggle: toggle }} />
         <Td dataLabel={t('Component')}>{component.name}</Td>
-        {showTier && (
-          <Td dataLabel={t('Tier')}>
-            <TierLabel tier={component.tier} />
-          </Td>
-        )}
+        <Td dataLabel={t('Tier')}>
+          <TierLabel tier={component.tier} />
+        </Td>
         <Td dataLabel={t('Gating label')}>
           {component.gatingLabels.length === 0 ? (
             <span className="autoshift-console__muted">{t('always placed')}</span>
@@ -124,7 +123,7 @@ const ComponentRows: FC<{
       </Tr>
       {expanded && (
         <Tr isExpanded>
-          <Td colSpan={span}>
+          <Td colSpan={8}>
             {/* Cluster column stays: a component spans clusters, and "which one is failing" is
                 the whole reason to open this row. */}
             <ComplianceDetail
@@ -147,20 +146,19 @@ const ComponentRows: FC<{
   );
 };
 
-const StackTable: FC<{ stack: Stack; showTier: boolean; policyNamespace: string }> = ({
-  stack,
-  showTier,
+const ComponentTable: FC<{ components: Component[]; policyNamespace: string }> = ({
+  components,
   policyNamespace,
 }) => {
   const { t } = useTranslation('plugin__autoshift-console');
 
   return (
-    <Table variant="compact" aria-label={stack.name}>
+    <Table variant="compact" aria-label={t('Components')}>
       <Thead>
         <Tr>
           <Th screenReaderText={t('Expand')} />
           <Th width={20}>{t('Component')}</Th>
-          {showTier && <Th width={10}>{t('Tier')}</Th>}
+          <Th width={10}>{t('Tier')}</Th>
           <Th width={25}>{t('Gating label')}</Th>
           <Th width={10}>{t('Clusters')}</Th>
           <Th width={15}>{t('Sync')}</Th>
@@ -168,26 +166,31 @@ const StackTable: FC<{ stack: Stack; showTier: boolean; policyNamespace: string 
           <Th width={10}>{t('Compliance')}</Th>
         </Tr>
       </Thead>
-      {stack.components.map((component, i) => (
+      {components.map((component, i) => (
         <Tbody key={component.name}>
-          <ComponentRows
-            component={component}
-            showTier={showTier}
-            rowIndex={i}
-            policyNamespace={policyNamespace}
-          />
+          <ComponentRows component={component} rowIndex={i} policyNamespace={policyNamespace} />
         </Tbody>
       ))}
     </Table>
   );
 };
 
-const StacksPage: FC = () => {
+/**
+ * One row per component — one Argo CD Application, i.e. one policy folder in AutoShift.
+ *
+ * There is deliberately no thematic grouping. Nothing on the cluster says what a component is
+ * for, so any stack layer has to be a hand-kept list, and AutoShift adds components faster than a
+ * list can follow. Everything shown here is read off live objects, so a component added to
+ * AutoShift appears correctly as soon as Argo CD syncs it. Tier is the only grouping the cluster
+ * itself carries (policies/<tier>/<name>), so it is offered as a filter.
+ */
+const ComponentsPage: FC = () => {
   const { t } = useTranslation('plugin__autoshift-console');
-  const [grouping, setGrouping] = useState<Grouping>('stack');
+  const [tier, setTier] = useState<string | undefined>();
+  const [filter, setFilter] = useState('');
 
   return (
-    <PageFrame title={t('Stacks')}>
+    <PageFrame title={t('Components')}>
       {(model) => {
         if (model.components.length === 0) {
           return (
@@ -201,50 +204,79 @@ const StacksPage: FC = () => {
           );
         }
 
-        const groups = grouping === 'tier' ? groupByTier(model.components) : model.stacks;
+        const tiers = Array.from(
+          new Set(model.components.flatMap((c) => (c.tier ? [c.tier] : []))),
+        ).sort((a, b) => tierRank(a) - tierRank(b) || a.localeCompare(b));
+        const needle = filter.trim().toLowerCase();
+        const shown = model.components.filter(
+          (c) =>
+            (!tier || c.tier === tier) &&
+            (!needle ||
+              c.name.toLowerCase().includes(needle) ||
+              c.gatingLabels.some((l) => l.toLowerCase().includes(needle))),
+        );
 
         return (
           <>
             <Split hasGutter className="autoshift-console__grouping">
+              {tiers.length > 1 && (
+                <SplitItem>
+                  <ToggleGroup aria-label={t('Filter components by tier')}>
+                    <ToggleGroupItem
+                      text={t('All')}
+                      buttonId="all"
+                      isSelected={!tier}
+                      onChange={() => {
+                        setTier(undefined);
+                      }}
+                    />
+                    {tiers.map((name) => (
+                      <ToggleGroupItem
+                        key={name}
+                        text={name}
+                        buttonId={name}
+                        isSelected={tier === name}
+                        onChange={() => {
+                          setTier(name);
+                        }}
+                      />
+                    ))}
+                  </ToggleGroup>
+                </SplitItem>
+              )}
               <SplitItem>
-                <ToggleGroup aria-label={t('Group components by')}>
-                  <ToggleGroupItem
-                    text={t('By stack')}
-                    buttonId="stack"
-                    isSelected={grouping === 'stack'}
-                    onChange={() => {
-                      setGrouping('stack');
-                    }}
-                  />
-                  <ToggleGroupItem
-                    text={t('By tier')}
-                    buttonId="tier"
-                    isSelected={grouping === 'tier'}
-                    onChange={() => {
-                      setGrouping('tier');
-                    }}
-                  />
-                </ToggleGroup>
+                <SearchInput
+                  placeholder={t('Filter by name or label')}
+                  value={filter}
+                  onChange={(_e, value) => {
+                    setFilter(value);
+                  }}
+                  onClear={() => {
+                    setFilter('');
+                  }}
+                />
+              </SplitItem>
+              <SplitItem isFilled />
+              <SplitItem>
+                <span className="autoshift-console__muted">
+                  {t('{{shown}} of {{total}} components', {
+                    shown: shown.length,
+                    total: model.components.length,
+                  })}
+                </span>
               </SplitItem>
             </Split>
 
-            {groups.map((stack) => (
-              <Card key={stack.id} className="autoshift-console__stack">
-                <CardTitle>
-                  {grouping === 'tier' ? <TierLabel tier={stack.name} /> : stack.name}{' '}
-                  <Label isCompact color="grey">
-                    {stack.components.length}
-                  </Label>
-                </CardTitle>
-                <CardBody>
-                  <StackTable
-                    stack={stack}
-                    showTier={grouping === 'stack'}
-                    policyNamespace={model.deployment.policyNamespace}
-                  />
-                </CardBody>
-              </Card>
-            ))}
+            {shown.length === 0 ? (
+              <EmptyState titleText={t('No components match')} headingLevel="h4">
+                <EmptyStateBody>{t('Nothing matched that filter.')}</EmptyStateBody>
+              </EmptyState>
+            ) : (
+              <ComponentTable
+                components={shown}
+                policyNamespace={model.deployment.policyNamespace}
+              />
+            )}
           </>
         );
       }}
@@ -252,4 +284,4 @@ const StacksPage: FC = () => {
   );
 };
 
-export default StacksPage;
+export default ComponentsPage;

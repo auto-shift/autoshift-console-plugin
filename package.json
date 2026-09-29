@@ -82,7 +82,7 @@
       "FleetPage": "./components/FleetPage",
       "ClusterSetsPage": "./components/ClusterSetsPage",
       "ClustersPage": "./components/ClustersPage",
-      "StacksPage": "./components/StacksPage"
+      "ComponentsPage": "./components/ComponentsPage"
     }
   },
   "packageManager": "yarn@4.17.1"
