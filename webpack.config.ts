@@ -125,7 +125,9 @@ const config: Configuration & { devServer?: DevServerConfiguration } = {
     ],
   },
   devServer: {
-    static: './dist',
+    // Absolute, like output.path: scripts/ocp.sh runs webpack from targets/<minor>, so a relative
+    // './dist' resolves to a directory the build never writes and every asset 404s.
+    static: path.resolve(dirname, 'dist'),
     port: 9001,
     // Bridge runs in a container and needs to reach this dev server.
     allowedHosts: 'all',
