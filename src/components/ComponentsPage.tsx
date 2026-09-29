@@ -69,9 +69,10 @@ const TierLabel: FC<{ tier?: string }> = ({ tier }) => {
 /** One component row plus its expandable policy-verdict detail. */
 const ComponentRows: FC<{
   component: Component;
+  showTier: boolean;
   rowIndex: number;
   policyNamespace: string;
-}> = ({ component, rowIndex, policyNamespace }) => {
+}> = ({ component, showTier, rowIndex, policyNamespace }) => {
   const { t } = useTranslation('plugin__autoshift-console');
   const [expanded, setExpanded] = useState(false);
   const toggle = () => {
@@ -92,9 +93,15 @@ const ComponentRows: FC<{
       <Tr isClickable onRowClick={toggle}>
         <Td expand={{ rowIndex, isExpanded: expanded, onToggle: toggle }} />
         <Td dataLabel={t('Component')}>{component.name}</Td>
-        <Td dataLabel={t('Tier')}>
-          <TierLabel tier={component.tier} />
-        </Td>
+        {showTier && (
+          <Td dataLabel={t('Tier')}>
+            {component.tier ? (
+              <TierLabel tier={component.tier} />
+            ) : (
+              <span className="autoshift-console__muted">—</span>
+            )}
+          </Td>
+        )}
         <Td dataLabel={t('Gating label')}>
           {component.gatingLabels.length === 0 ? (
             <span className="autoshift-console__muted">{t('always placed')}</span>
@@ -123,7 +130,7 @@ const ComponentRows: FC<{
       </Tr>
       {expanded && (
         <Tr isExpanded>
-          <Td colSpan={8}>
+          <Td colSpan={showTier ? 8 : 7}>
             {/* Cluster column stays: a component spans clusters, and "which one is failing" is
                 the whole reason to open this row. */}
             <ComplianceDetail
@@ -146,10 +153,11 @@ const ComponentRows: FC<{
   );
 };
 
-const ComponentTable: FC<{ components: Component[]; policyNamespace: string }> = ({
-  components,
-  policyNamespace,
-}) => {
+const ComponentTable: FC<{
+  components: Component[];
+  showTier: boolean;
+  policyNamespace: string;
+}> = ({ components, showTier, policyNamespace }) => {
   const { t } = useTranslation('plugin__autoshift-console');
 
   return (
@@ -158,7 +166,7 @@ const ComponentTable: FC<{ components: Component[]; policyNamespace: string }> =
         <Tr>
           <Th screenReaderText={t('Expand')} />
           <Th width={20}>{t('Component')}</Th>
-          <Th width={10}>{t('Tier')}</Th>
+          {showTier && <Th width={10}>{t('Tier')}</Th>}
           <Th width={25}>{t('Gating label')}</Th>
           <Th width={10}>{t('Clusters')}</Th>
           <Th width={15}>{t('Sync')}</Th>
@@ -168,7 +176,12 @@ const ComponentTable: FC<{ components: Component[]; policyNamespace: string }> =
       </Thead>
       {components.map((component, i) => (
         <Tbody key={component.name}>
-          <ComponentRows component={component} rowIndex={i} policyNamespace={policyNamespace} />
+          <ComponentRows
+            component={component}
+            showTier={showTier}
+            rowIndex={i}
+            policyNamespace={policyNamespace}
+          />
         </Tbody>
       ))}
     </Table>
@@ -182,7 +195,8 @@ const ComponentTable: FC<{ components: Component[]; policyNamespace: string }> =
  * for, so any stack layer has to be a hand-kept list, and AutoShift adds components faster than a
  * list can follow. Everything shown here is read off live objects, so a component added to
  * AutoShift appears correctly as soon as Argo CD syncs it. Tier is the only grouping the cluster
- * itself carries (policies/<tier>/<name>), so it is offered as a filter.
+ * itself carries (policies/<tier>/<name>), so it is offered as a filter. OCI mode deploys with no
+ * source path and therefore no tier, and then the column and filter are hidden rather than blank.
  */
 const ComponentsPage: FC = () => {
   const { t } = useTranslation('plugin__autoshift-console');
@@ -274,6 +288,7 @@ const ComponentsPage: FC = () => {
             ) : (
               <ComponentTable
                 components={shown}
+                showTier={tiers.length > 0}
                 policyNamespace={model.deployment.policyNamespace}
               />
             )}
