@@ -17,14 +17,14 @@
 # those separately. This file is only for a FIXABLE HIGH/CRITICAL that genuinely does not apply.
 
 
-# curl (CVE-2026-8458, CVE-2026-8927): fixed in RHEL as 7.76.1-40.el9_8.7, but no nginx-126 base ships
-# it yet. Drop these entries once the pinned base carries it, rather than extending expired_at.
+# libxml2 (CVE-2026-74860, CVE-2026-86140): fixed in RHEL as 2.9.13-14.el9_8.5, but no nginx-126 base
+# ships it yet. Drop these entries once the pinned base carries it, rather than extending expired_at.
 vulnerabilities:
-  - id: CVE-2026-8458
+  - id: CVE-2026-74860
     statement: >-
-      curl-minimal/libcurl-minimal 7.76.1-40.el9_8.5 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 7.76.1-40.el9_8.7. Nothing in the running image reaches it: nginx does not link libcurl, and its only consumers are the curl CLI, librepo (dnf) and tpm2-tss, none of which the pod runs. Remove once the base carries 7.76.1-40.el9_8.7.
+      libxml2 2.9.13-14.el9_8.4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.9.13-14.el9_8.5. Nothing in the running pod reaches it: nginx links libxml2 only through ngx_http_xslt_filter_module, which the base config loads but the nginx.conf the Helm chart mounts over it does not (it has no load_module), and the pod serves static assets with no xslt_stylesheet. Its other consumers are dnf/librepo, libarchive and gettext, none of which the pod runs. This one is also confined to the libxml2 Python bindings, which the image does not install. Remove once the base carries 2.9.13-14.el9_8.5.
     expired_at: 2026-10-06
-  - id: CVE-2026-8927
+  - id: CVE-2026-86140
     statement: >-
-      curl-minimal/libcurl-minimal 7.76.1-40.el9_8.5 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 7.76.1-40.el9_8.7. Nothing in the running image reaches it: nginx does not link libcurl, and its only consumers are the curl CLI, librepo (dnf) and tpm2-tss, none of which the pod runs. Remove once the base carries 7.76.1-40.el9_8.7.
+      libxml2 2.9.13-14.el9_8.4 is inherited from the ubi9/nginx-126 base, which Red Hat has not yet rebuilt with the fixed 2.9.13-14.el9_8.5. Nothing in the running pod reaches it: nginx links libxml2 only through ngx_http_xslt_filter_module, which the base config loads but the nginx.conf the Helm chart mounts over it does not (it has no load_module), and the pod serves static assets with no xslt_stylesheet. Its other consumers are dnf/librepo, libarchive and gettext, none of which the pod runs. Remove once the base carries 2.9.13-14.el9_8.5.
     expired_at: 2026-10-06
