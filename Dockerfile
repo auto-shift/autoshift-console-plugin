@@ -63,6 +63,16 @@ LABEL name="autoshift-console-plugin" \
       org.opencontainers.image.revision="${PLUGIN_REVISION}" \
       org.opencontainers.image.version="${PLUGIN_VERSION}"
 
+# Red Hat publishes fixed RPMs days before it rebuilds ubi9/nginx-126 on them, so even the newest
+# base digest routinely carries a fixable HIGH (openssl, expat, libxml2, curl, libevent and gdb in
+# a single fortnight) and the scan gates fail on packages this repo cannot change. Upgrading here
+# closes that window: a fixable CVE is one whose fix is already in the UBI repos. The digest pin
+# still fixes the starting point; the scan of the built image is what describes what ships.
+USER 0
+RUN dnf -y upgrade --refresh --nodocs && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf
+
 # Only the built assets cross the stage boundary — no source, no node_modules, no build toolchain.
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html
 
