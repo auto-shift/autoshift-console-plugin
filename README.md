@@ -203,7 +203,9 @@ helm upgrade -i autoshift-console charts/openshift-console-plugin \
 
 Base images are pinned by digest so a scan describes exactly what ships; Dependabot moves the pin,
 and the weekly rebuild overrides it via `--build-arg` to pick up Red Hat's patched bases without
-waiting for a commit.
+waiting for a commit. On top of the pin, the runtime stage runs `dnf upgrade`, because Red Hat
+ships fixed RPMs days before it rebuilds the base on them; without it the scan gates fail on
+packages this repo cannot otherwise change.
 
 **On "zero vulnerabilities":** the gate enforces zero *fixable* HIGH/CRITICAL, and the image
 currently meets it — a local scan of the full build reported **0 fixable at every severity**.
