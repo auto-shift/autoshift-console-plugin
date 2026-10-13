@@ -120,8 +120,6 @@ export interface Component {
   applicationName: string;
   /** Support tier from the source path (policies/<tier>/<name>): stable, certified, community. */
   tier?: string;
-  /** API groups this component's policies manage, most-used first. Empty for operator-only installs. */
-  apiGroups: string[];
   syncStatus?: string;
   healthStatus?: string;
   /** autoshift.io/<key> the component's Placement gates on, when it has one. */
@@ -132,12 +130,6 @@ export interface Component {
   compliance: ComplianceCounts;
   /** Per-policy, per-cluster verdicts, so a failure can be traced to a specific cluster. */
   checks: PolicyCheck[];
-}
-
-export interface Stack {
-  id: string;
-  name: string;
-  components: Component[];
 }
 
 export interface ClusterView {
@@ -218,5 +210,4 @@ export interface FleetModel {
   clusters: ClusterView[];
   clusterSets: ClusterSetView[];
   components: Component[];
-  stacks: Stack[];
 }

@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { buildFleetModel } from './model';
-import { groupByTier } from './catalog';
 import { AUTO_STAMPED_LABELS } from './config';
 import type {
   ApplicationResource,
@@ -115,11 +114,6 @@ describeLive('buildFleetModel against a live hub snapshot', () => {
     expect(nmstate?.clusters).toEqual([]);
   });
 
-  it('groups components into stacks with nothing left unaccounted for', () => {
-    const grouped = model.stacks.flatMap((s) => s.components.map((c) => c.name));
-    expect(grouped.sort()).toEqual(model.components.map((c) => c.name).sort());
-  });
-
   it('collapses the hub cluster set label wall into a readable feature list', () => {
     const hub = model.clusterSets.find((s) => s.name === 'hub');
     const labelCount = Object.keys(hub?.labels ?? {}).length;
@@ -192,30 +186,6 @@ describeLive('buildFleetModel against a live hub snapshot', () => {
     expect(tiers.has(undefined)).toBe(false);
     const acs = model.components.find((c) => c.name === 'advanced-cluster-security');
     expect(acs?.tier).toBe('stable');
-  });
-
-  it('groups by tier without losing any component', () => {
-    const grouped = groupByTier(model.components).flatMap((s) => s.components.map((c) => c.name));
-    expect(grouped.sort()).toEqual(model.components.map((c) => c.name).sort());
-  });
-
-  it('classifies a component by the API groups its policies manage', () => {
-    const csa = model.components.find((c) => c.name === 'cluster-set-assignment');
-    expect(csa?.apiGroups[0]).toBe('cluster.open-cluster-management.io');
-    const upgrade = model.components.find((c) => c.name === 'openshift-upgrade');
-    expect(upgrade?.apiGroups[0]).toBe('config.openshift.io');
-  });
-
-  it('never drops a newly added component into a bare Other bucket', () => {
-    // Neither of these is in the built-in catalog, so both exercise auto-classification.
-    const named = new Map(
-      model.stacks.flatMap((s) => s.components.map((c) => [c.name, s.name] as const)),
-    );
-    expect(named.get('cluster-set-assignment')).toBe('Platform & Fleet');
-    expect(named.get('openshift-upgrade')).toBe('Platform & Fleet');
-    // Only components managing nothing but generic resources may reach Other.
-    const other = model.stacks.find((s) => s.name === 'Other');
-    expect((other?.components ?? []).every((c) => c.apiGroups.length === 0)).toBe(true);
   });
 
   /*

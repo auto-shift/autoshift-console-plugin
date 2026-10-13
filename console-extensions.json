@@ -82,18 +82,18 @@
     "type": "console.page/route",
     "properties": {
       "exact": true,
-      "path": "/autoshift/stacks",
+      "path": "/autoshift/components",
       "component": {
-        "$codeRef": "StacksPage.default"
+        "$codeRef": "ComponentsPage.default"
       }
     }
   },
   {
     "type": "console.navigation/href",
     "properties": {
-      "id": "autoshift-stacks",
-      "name": "%plugin__autoshift-console~Stacks%",
-      "href": "/autoshift/stacks",
+      "id": "autoshift-components",
+      "name": "%plugin__autoshift-console~Components%",
+      "href": "/autoshift/components",
       "perspective": "acm",
       "section": "autoshift"
     }

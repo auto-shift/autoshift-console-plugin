@@ -71,7 +71,7 @@ test.describe('AutoShift console plugin', () => {
       ['Fleet', '/autoshift/fleet'],
       ['Cluster Sets', '/autoshift/cluster-sets'],
       ['Clusters', '/autoshift/clusters'],
-      ['Stacks', '/autoshift/stacks'],
+      ['Components', '/autoshift/components'],
     ] as const) {
       await page.getByTestId('nav').getByText(name, { exact: true }).click();
       await expect(page).toHaveURL(new RegExp(`${path}(\\?|$)`));
