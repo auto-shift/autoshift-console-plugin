@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@playwright/browser-chromium": "~1.63.0",
-    "@playwright/test": "~1.63.0",
+    "@playwright/test": "~1.64.0",
     "@swc/core": "^1.15.47",
     "@swc/jest": "^0.2.39",
     "@testing-library/dom": "^10.4.2",
