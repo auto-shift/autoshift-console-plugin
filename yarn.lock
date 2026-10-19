@@ -1862,12 +1862,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/browser-chromium@npm:~1.63.0":
-  version: 1.63.0
-  resolution: "@playwright/browser-chromium@npm:1.63.0"
+"@playwright/browser-chromium@npm:~1.64.1":
+  version: 1.64.1
+  resolution: "@playwright/browser-chromium@npm:1.64.1"
   dependencies:
-    playwright-core: "npm:1.63.0"
-  checksum: 10c0/be884808357a95aadd3aaa98141eb2165629070fc25a9f0576ea33a92fdb483dcc438a8329b3256e02a9eb1a0342739f7fc5dd71962acd429b0bca42bb25890c
+    playwright-core: "npm:1.64.1"
+  checksum: 10c0/0448bc459dff6e339ee8ab614eee755e8cbe52e8f3ca0b362ac20fd8273e25e81b44d50b19ba8ad66d5fa441964baed997a84b291265e789dec4a49d97c7bb89
   languageName: node
   linkType: hard
 
@@ -3416,7 +3416,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "autoshift-console@workspace:."
   dependencies:
-    "@playwright/browser-chromium": "npm:~1.63.0"
+    "@playwright/browser-chromium": "npm:~1.64.1"
     "@playwright/test": "npm:~1.64.0"
     "@swc/core": "npm:^1.15.47"
     "@swc/jest": "npm:^0.2.39"
@@ -8309,21 +8309,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.63.0":
-  version: 1.63.0
-  resolution: "playwright-core@npm:1.63.0"
-  bin:
-    playwright-core: cli.js
-  checksum: 10c0/39c1ebae4029ca2e9371e00a5588d962038e24b6e0bdb7d0d27374dde04838f349b83ae0c8b3b648653d0935cba7fb9011f1201adaab9dd0db7801ad6c75e9aa
-  languageName: node
-  linkType: hard
-
 "playwright-core@npm:1.64.0":
   version: 1.64.0
   resolution: "playwright-core@npm:1.64.0"
   bin:
     playwright-core: cli.js
   checksum: 10c0/fe3237282ada99d634e4d002efd3db6aa51218f7f4f3b1bc31515d30fa6eec5ec940d425e035db2af4e2856d9cae30b7a27bd167870b3285d40bdffd399ab286
+  languageName: node
+  linkType: hard
+
+"playwright-core@npm:1.64.1":
+  version: 1.64.1
+  resolution: "playwright-core@npm:1.64.1"
+  bin:
+    playwright-core: cli.js
+  checksum: 10c0/91c4f5ed1cff4b0e18b6ac62f66770f5f1b6c204d4aebd6a321c07466dca18a70822ac692597c6059705a703f9768097ac551df179fb49294d639509148e04f3
   languageName: node
   linkType: hard
 
