@@ -114,6 +114,30 @@ updates:
       patternfly:
         patterns: ['@patternfly/*']
 
+  # One directory serves both OpenShift 4.23 and 5.0 — Red Hat ships them from the same console
+  # line, so they share one contract and one image (see `aliases` in ocp-targets.json).
+  - package-ecosystem: npm
+    directory: /targets/5.0
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-router
+      - dependency-name: react-router-dom
+      - dependency-name: react-router-dom-v5-compat
+      - dependency-name: react-i18next
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-dom'
+      - dependency-name: '@testing-library/react'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk'
+      - dependency-name: '@openshift-console/dynamic-plugin-sdk-webpack'
+    groups:
+      patternfly:
+        patterns: ['@patternfly/*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
