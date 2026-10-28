@@ -1,0 +1,84 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types"
+    ],
+    "paths": {
+      "@compat/router": [
+        "./compat/router.ts"
+      ],
+      "@openshift-console/dynamic-plugin-sdk": [
+        "./node_modules/@openshift-console/dynamic-plugin-sdk"
+      ],
+      "@openshift-console/dynamic-plugin-sdk/*": [
+        "./node_modules/@openshift-console/dynamic-plugin-sdk/*"
+      ],
+      "@openshift-console/dynamic-plugin-sdk-webpack": [
+        "./node_modules/@openshift-console/dynamic-plugin-sdk-webpack"
+      ],
+      "@openshift-console/dynamic-plugin-sdk-webpack/*": [
+        "./node_modules/@openshift-console/dynamic-plugin-sdk-webpack/*"
+      ],
+      "@patternfly/react-core": [
+        "./node_modules/@patternfly/react-core"
+      ],
+      "@patternfly/react-core/*": [
+        "./node_modules/@patternfly/react-core/*"
+      ],
+      "@patternfly/react-icons": [
+        "./node_modules/@patternfly/react-icons"
+      ],
+      "@patternfly/react-icons/*": [
+        "./node_modules/@patternfly/react-icons/*"
+      ],
+      "@patternfly/react-table": [
+        "./node_modules/@patternfly/react-table"
+      ],
+      "@patternfly/react-table/*": [
+        "./node_modules/@patternfly/react-table/*"
+      ],
+      "@testing-library/react": [
+        "./node_modules/@testing-library/react"
+      ],
+      "@testing-library/react/*": [
+        "./node_modules/@testing-library/react/*"
+      ],
+      "@types/react": [
+        "./node_modules/@types/react"
+      ],
+      "@types/react/*": [
+        "./node_modules/@types/react/*"
+      ],
+      "react": [
+        "./node_modules/react"
+      ],
+      "react/*": [
+        "./node_modules/react/*"
+      ],
+      "react-dom": [
+        "./node_modules/react-dom"
+      ],
+      "react-dom/*": [
+        "./node_modules/react-dom/*"
+      ],
+      "react-i18next": [
+        "./node_modules/react-i18next"
+      ],
+      "react-i18next/*": [
+        "./node_modules/react-i18next/*"
+      ],
+      "react-router": [
+        "./node_modules/react-router"
+      ],
+      "react-router/*": [
+        "./node_modules/react-router/*"
+      ]
+    }
+  },
+  "include": [
+    "../../src",
+    "./compat"
+  ]
+}

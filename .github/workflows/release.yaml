@@ -33,7 +33,9 @@ jobs:
       - uses: actions/checkout@v7
       - id: read
         run: |
-          MATRIX=$(jq -c '{ocp: (.targets | keys)}' ocp-targets.json)
+          # aliases rides along as a space-separated string: other minors that run the same
+          # console (4.23 and 5.0 ship together), so the one image is tagged under each.
+          MATRIX=$(jq -c '{include: [.targets | to_entries[] | {ocp: .key, aliases: ((.value.aliases // []) | join(" "))}]}' ocp-targets.json)
           echo "matrix=${MATRIX}" >> "$GITHUB_OUTPUT"
           VERSION="${{ github.event.inputs.tag }}"
           [ -n "$VERSION" ] || VERSION="${GITHUB_REF#refs/tags/}"
@@ -150,14 +152,22 @@ jobs:
       # Two tags per target: an immutable one pinning this release, and a floating one tracking
       # the newest build for that OpenShift minor. There is deliberately no bare :latest — it
       # would be ambiguous across targets and is the kind of tag that gets deployed by accident.
+      # A target's aliases get the same pair, pointing at the same digest, so a cluster finds its
+      # image under the minor it reports without a second build.
       - name: Push
         id: push
+        env:
+          ALIASES: ${{ matrix.aliases }}
         run: |
           PINNED="${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}"
-          FLOATING="${{ env.IMAGE }}:ocp${{ matrix.ocp }}"
           docker push "$PINNED"
-          docker tag "$PINNED" "$FLOATING"
-          docker push "$FLOATING"
+          for MINOR in ${{ matrix.ocp }} ${ALIASES}; do
+            for TAG in "${{ needs.targets.outputs.version }}-ocp${MINOR}" "ocp${MINOR}"; do
+              [ "${{ env.IMAGE }}:${TAG}" = "$PINNED" ] && continue
+              docker tag "$PINNED" "${{ env.IMAGE }}:${TAG}"
+              docker push "${{ env.IMAGE }}:${TAG}"
+            done
+          done
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$PINNED" | cut -d@ -f2)
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
 
@@ -171,22 +181,31 @@ jobs:
           cosign attest --yes --predicate sbom.spdx.json --type spdxjson "$REF"
 
       - name: Summary
+        env:
+          ALIASES: ${{ matrix.aliases }}
         run: |
+          MINORS="${{ matrix.ocp }}"
+          for MINOR in ${ALIASES}; do MINORS="${MINORS} / ${MINOR}"; done
+          # The floor comes from pluginAPI, not the target key: an aliased target's floor is its
+          # lowest alias (5.0 also serves 4.23, so its floor is 4.23.0-0).
+          FLOOR=$(./check-min-version.sh "${{ matrix.ocp }}")
           {
-            echo "### OpenShift ${{ matrix.ocp }}"
+            echo "### OpenShift ${MINORS}"
             echo ""
             echo '```'
-            echo "${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${{ matrix.ocp }}"
-            echo "${{ env.IMAGE }}:ocp${{ matrix.ocp }}"
+            for MINOR in ${{ matrix.ocp }} ${ALIASES}; do
+              echo "${{ env.IMAGE }}:${{ needs.targets.outputs.version }}-ocp${MINOR}"
+              echo "${{ env.IMAGE }}:ocp${MINOR}"
+            done
             echo "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
             echo '```'
             echo ""
-            echo "Pin the digest in the AutoShift clusterset running OpenShift ${{ matrix.ocp }}:"
+            echo "Pin the digest in the AutoShift clusterset running OpenShift ${MINORS}:"
             echo ""
             echo '```yaml'
             echo "config:"
             echo "  autoshiftConsole:"
             echo "    image: '${{ env.IMAGE }}@${{ steps.push.outputs.digest }}'"
-            echo "    minOpenShiftVersion: '${{ matrix.ocp }}.0-0'"
+            echo "    minOpenShiftVersion: '${FLOOR}'"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

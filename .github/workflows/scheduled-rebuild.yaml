@@ -47,7 +47,9 @@ jobs:
             echo "No release tag found — falling back to the checked-out ocp-targets.json"
             JSON=$(cat ocp-targets.json)
           fi
-          echo "matrix=$(printf '%s' "$JSON" | jq -c '{ocp: (.targets | keys)}')" >> "$GITHUB_OUTPUT"
+          # aliases (absent before 5.0 was added, hence the default) are the other minors that run
+          # the same console; the rebuild moves their floating tags along with the target's own.
+          echo "matrix=$(printf '%s' "$JSON" | jq -c '{include: [.targets | to_entries[] | {ocp: .key, aliases: ((.value.aliases // []) | join(" "))}]}')" >> "$GITHUB_OUTPUT"
           printf '%s' "$JSON" | jq -r '"Rebuilding: " + (.targets | keys | join(", "))'
 
   rebuild:
@@ -184,15 +186,22 @@ jobs:
 
       # Published under a dated tag as well as the floating one, so a cluster can pin to a rebuild
       # and the release tag itself keeps meaning "the image originally cut for that version".
+      # Aliases get the same pair on the same digest, or their floating tag would stay on the
+      # original release while the target's own moved on.
       - name: Push rebuild
         if: steps.tag.outputs.found == 'true'
         id: push
+        env:
+          ALIASES: ${{ matrix.aliases }}
         run: |
           SRC="${{ env.IMAGE }}:rebuild-ocp${{ matrix.ocp }}"
           DATED="${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}-ocp${{ matrix.ocp }}-${{ steps.tag.outputs.date }}"
-          FLOATING="${{ env.IMAGE }}:ocp${{ matrix.ocp }}"
-          docker tag "$SRC" "$DATED"; docker tag "$SRC" "$FLOATING"
-          docker push "$DATED"; docker push "$FLOATING"
+          for MINOR in ${{ matrix.ocp }} ${ALIASES}; do
+            for TAG in "${{ steps.tag.outputs.tag }}-ocp${MINOR}-${{ steps.tag.outputs.date }}" "ocp${MINOR}"; do
+              docker tag "$SRC" "${{ env.IMAGE }}:${TAG}"
+              docker push "${{ env.IMAGE }}:${TAG}"
+            done
+          done
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$DATED" | cut -d@ -f2)
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
 
