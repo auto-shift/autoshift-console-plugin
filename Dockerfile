@@ -15,7 +15,7 @@
 # ephemeral checkout, which is how it builds against Red Hat's patched bases without waiting for
 # the Dependabot PR to merge.
 
-FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:55dcfb69110fda5e72a907b2a658ecebf1c9d9e430557a2149695398bb659048 AS build
+FROM registry.access.redhat.com/ubi9/nodejs-22:latest@sha256:4b48d9d14a79215d2f8094ab5feed5ffd6d641eb72f94d708374bb76985606d7 AS build
 USER root
 
 # Which OpenShift release this image is built for. One image per target: the console supplies
