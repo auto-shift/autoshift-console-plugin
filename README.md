@@ -111,6 +111,11 @@ plugin, and every route 404s with nothing in any server-side log.
 | 4.20 | 17 | `react-router-dom-v5-compat` | `:ocp4.20` |
 | 4.21 | 17 | `react-router-dom-v5-compat` | `:ocp4.21` |
 | 4.22 | 18 | `react-router` | `:ocp4.22` |
+| 4.23 / 5.0 | 18 | `react-router` | `:ocp5.0`, `:ocp4.23` |
+
+Red Hat ships 4.23 and 5.0 together from one console line, so they are a single target
+(`targets/5.0`) and a single image published under both tags. `aliases` in `ocp-targets.json`
+adds the extra tags, and the target's `pluginAPI` range admits both minors.
 
 The repo is split along that axis. The build toolchain is target-independent and lives at the
 root; everything that ends up in the bundle — react, PatternFly, the SDK — lives in
@@ -123,13 +128,13 @@ Two installs, then pick a target with `OCP_TARGET` (it defaults to the newest de
 
 ```bash
 node .yarn/releases/yarn-4.17.1.cjs install --immutable          # toolchain
-(cd targets/4.22 && node ../../.yarn/releases/yarn-4.17.1.cjs install --immutable)
+(cd targets/5.0 && node ../../.yarn/releases/yarn-4.17.1.cjs install --immutable)
 
-export OCP_TARGET=4.22
+export OCP_TARGET=5.0
 node .yarn/releases/yarn-4.17.1.cjs start        # plugin dev server on :9001
 
 oc login <your-autoshift-hub>
-node .yarn/releases/yarn-4.17.1.cjs start-console # console container on :9000, pinned to 4.22
+node .yarn/releases/yarn-4.17.1.cjs start-console # console container on :9000, pinned to 5.0
 ```
 
 Open <http://localhost:9000/autoshift>. `window.SERVER_FLAGS.consolePlugins` should list

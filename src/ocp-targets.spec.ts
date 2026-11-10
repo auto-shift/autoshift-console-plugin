@@ -10,7 +10,13 @@ const readJson = (p: string) => JSON.parse(fs.readFileSync(path.join(ROOT, p), '
 const registry = readJson('ocp-targets.json') as {
   targets: Record<
     string,
-    { sdk: string; shared: Record<string, string>; pins: Record<string, string> }
+    {
+      sdk: string;
+      shared: Record<string, string>;
+      pins: Record<string, string>;
+      pluginAPI: string;
+      aliases?: string[];
+    }
   >;
 };
 const targets = Object.keys(registry.targets);
@@ -79,6 +85,18 @@ describe('OpenShift build targets', () => {
     expect(() =>
       execFileSync('node', ['scripts/sync-targets.mjs', '--check'], { cwd: ROOT }),
     ).not.toThrow();
+  });
+
+  /*
+   * An alias publishes this target's image under another minor's tag. If pluginAPI does not admit
+   * that minor, a cluster pulls the image it was told to and the console skips the plugin without
+   * a word — so every minor the image is tagged for must open a range of its own.
+   */
+  it.each(targets)('%s declares a pluginAPI range for itself and every alias', (minor) => {
+    const { pluginAPI, aliases = [] } = registry.targets[minor];
+    const floors = [minor, ...aliases].filter((m) => !pluginAPI.includes(`>=${m}.0-0`));
+    expect(floors).toEqual([]);
+    expect(aliases.filter((a) => a in registry.targets)).toEqual([]);
   });
 
   it('builds every declared target in CI', () => {

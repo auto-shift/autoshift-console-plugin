@@ -245,7 +245,7 @@ helm upgrade -i my-plugin charts/openshift-console-plugin \
 4. **Module federation requires exact module mapping** - `exposedModules` must match `$codeRef` values
 5. **PatternFly CSS variables only** - hex colors break dark mode
 6. **No HMR for extensions** - changes to `console-extensions.json` require restart
-7. **React version follows the target** - 18 on 4.22, 17 on 4.20/4.21. It is not a free choice;
+7. **React version follows the target** - 18 on 4.22 and 4.23/5.0, 17 on 4.20/4.21. It is not a free choice;
    the console provides it as a shared singleton. See "OpenShift Build Targets" above.
 
 ## Extension Points
