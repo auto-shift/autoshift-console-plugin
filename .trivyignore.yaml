@@ -16,4 +16,60 @@
 # nothing to action until Red Hat ships a fix, and the weekly scan of the published image reports
 # those separately. This file is only for a FIXABLE HIGH/CRITICAL that genuinely does not apply.
 
-vulnerabilities: []
+vulnerabilities:
+  - id: CVE-2026-107364
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112315
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112316
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112317
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112318
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112319
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112320
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112321
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112322
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-112323
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-118380
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-119079
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-71199
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
+  - id: CVE-2026-71200
+    statement: >-
+      krb5 KDC/kadmind server-side flaws; this image ships krb5-libs only (no krb5-server, so no krb5kdc or kadmind) and nginx serves static assets with no Kerberos/GSSAPI configured. Fixed build 1.21.1-10.el9_9.2 is not yet in the UBI 9 repos (newest there is 1.21.1-10.el9_8.1), so the Dockerfile's dnf upgrade cannot pick it up. Remove once UBI carries it.
+    expired_at: 2026-11-30
