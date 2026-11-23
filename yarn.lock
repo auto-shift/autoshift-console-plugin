@@ -690,19 +690,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@formatjs/icu-messageformat-parser@npm:^3.5.22":
-  version: 3.5.22
-  resolution: "@formatjs/icu-messageformat-parser@npm:3.5.22"
+"@formatjs/icu-messageformat-parser@npm:3.5.23":
+  version: 3.5.23
+  resolution: "@formatjs/icu-messageformat-parser@npm:3.5.23"
   dependencies:
-    "@formatjs/icu-skeleton-parser": "npm:2.1.12"
-  checksum: 10c0/b28638f59498ddc40a2916b3cd419e624c83a36adaa87a284f2311aea603792cead28969719e44989d0c21fb6559858e9f7750eaa463a033be756fa87bd8e4bd
+    "@formatjs/icu-skeleton-parser": "npm:2.1.13"
+  checksum: 10c0/133c2058bb7f59944ac97dce1ed358de988b31f97e1ec8e0c334d0b9548bfe80bde3ce47248cd72376d96aae8273ca6fd92ddded12abceecdc01b7abd88bb6c6
   languageName: node
   linkType: hard
 
-"@formatjs/icu-skeleton-parser@npm:2.1.12":
-  version: 2.1.12
-  resolution: "@formatjs/icu-skeleton-parser@npm:2.1.12"
-  checksum: 10c0/56507b7b5e3e38f964e80efbece91ce80f2d33cbeb0533a66efd9bda55b9d17e3aa2e933a8ad56d8368840c80d4777cc200e83ef6c8e2d4f2e24563ac2c404fa
+"@formatjs/icu-skeleton-parser@npm:2.1.13":
+  version: 2.1.13
+  resolution: "@formatjs/icu-skeleton-parser@npm:2.1.13"
+  checksum: 10c0/b8296e15516a136795bdfbcac3b6a8e42b7b6ebc692460f1e3b919379b5bbe5b87c3b81003a83c64b59d389fc11ae6206f49fb0b7232a63e7f65b7bd4a57b5ac
   languageName: node
   linkType: hard
 
@@ -754,7 +754,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/confirm@npm:^6.3.5":
+"@inquirer/confirm@npm:6.4.0":
   version: 6.4.0
   resolution: "@inquirer/confirm@npm:6.4.0"
   dependencies:
@@ -796,7 +796,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/input@npm:^5.1.9":
+"@inquirer/input@npm:5.2.0":
   version: 5.2.0
   resolution: "@inquirer/input@npm:5.2.0"
   dependencies:
@@ -811,7 +811,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/password@npm:^5.2.5":
+"@inquirer/password@npm:5.3.0":
   version: 5.3.0
   resolution: "@inquirer/password@npm:5.3.0"
   dependencies:
@@ -827,7 +827,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inquirer/select@npm:^5.2.8":
+"@inquirer/select@npm:5.3.0":
   version: 5.3.0
   resolution: "@inquirer/select@npm:5.3.0"
   dependencies:
@@ -1973,6 +1973,58 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core@npm:1.16.22":
+  version: 1.16.22
+  resolution: "@swc/core@npm:1.16.22"
+  dependencies:
+    "@swc/core-darwin-arm64": "npm:1.16.22"
+    "@swc/core-darwin-x64": "npm:1.16.22"
+    "@swc/core-linux-arm-gnueabihf": "npm:1.16.22"
+    "@swc/core-linux-arm64-gnu": "npm:1.16.22"
+    "@swc/core-linux-arm64-musl": "npm:1.16.22"
+    "@swc/core-linux-ppc64-gnu": "npm:1.16.22"
+    "@swc/core-linux-s390x-gnu": "npm:1.16.22"
+    "@swc/core-linux-x64-gnu": "npm:1.16.22"
+    "@swc/core-linux-x64-musl": "npm:1.16.22"
+    "@swc/core-win32-arm64-msvc": "npm:1.16.22"
+    "@swc/core-win32-ia32-msvc": "npm:1.16.22"
+    "@swc/core-win32-x64-msvc": "npm:1.16.22"
+    "@swc/counter": "npm:^0.1.3"
+    "@swc/types": "npm:^0.1.28"
+  peerDependencies:
+    "@swc/helpers": ">=0.5.17"
+  dependenciesMeta:
+    "@swc/core-darwin-arm64":
+      optional: true
+    "@swc/core-darwin-x64":
+      optional: true
+    "@swc/core-linux-arm-gnueabihf":
+      optional: true
+    "@swc/core-linux-arm64-gnu":
+      optional: true
+    "@swc/core-linux-arm64-musl":
+      optional: true
+    "@swc/core-linux-ppc64-gnu":
+      optional: true
+    "@swc/core-linux-s390x-gnu":
+      optional: true
+    "@swc/core-linux-x64-gnu":
+      optional: true
+    "@swc/core-linux-x64-musl":
+      optional: true
+    "@swc/core-win32-arm64-msvc":
+      optional: true
+    "@swc/core-win32-ia32-msvc":
+      optional: true
+    "@swc/core-win32-x64-msvc":
+      optional: true
+  peerDependenciesMeta:
+    "@swc/helpers":
+      optional: true
+  checksum: 10c0/1fecb6764b2b9ad3b5e5ce14fcc78ba8eb6226ef23e51df28f485f3ca207d9587732a61a4a4ec3c439e3fe80955128d9d4780f1976757b7d05f40d803f106781
+  languageName: node
+  linkType: hard
+
 "@swc/core@npm:^1.15.18, @swc/core@npm:^1.15.47":
   version: 1.16.0
   resolution: "@swc/core@npm:1.16.0"
@@ -2022,58 +2074,6 @@ __metadata:
     "@swc/helpers":
       optional: true
   checksum: 10c0/34b74431b38640e4e4ac3537dfb4222f92a6179b29d3c32a1501cf86c195736c9e16dcfabffeedfb29697d21afd2f6b83e5ff71cf897c71b491ef9e0161cee36
-  languageName: node
-  linkType: hard
-
-"@swc/core@npm:^1.16.21":
-  version: 1.16.22
-  resolution: "@swc/core@npm:1.16.22"
-  dependencies:
-    "@swc/core-darwin-arm64": "npm:1.16.22"
-    "@swc/core-darwin-x64": "npm:1.16.22"
-    "@swc/core-linux-arm-gnueabihf": "npm:1.16.22"
-    "@swc/core-linux-arm64-gnu": "npm:1.16.22"
-    "@swc/core-linux-arm64-musl": "npm:1.16.22"
-    "@swc/core-linux-ppc64-gnu": "npm:1.16.22"
-    "@swc/core-linux-s390x-gnu": "npm:1.16.22"
-    "@swc/core-linux-x64-gnu": "npm:1.16.22"
-    "@swc/core-linux-x64-musl": "npm:1.16.22"
-    "@swc/core-win32-arm64-msvc": "npm:1.16.22"
-    "@swc/core-win32-ia32-msvc": "npm:1.16.22"
-    "@swc/core-win32-x64-msvc": "npm:1.16.22"
-    "@swc/counter": "npm:^0.1.3"
-    "@swc/types": "npm:^0.1.28"
-  peerDependencies:
-    "@swc/helpers": ">=0.5.17"
-  dependenciesMeta:
-    "@swc/core-darwin-arm64":
-      optional: true
-    "@swc/core-darwin-x64":
-      optional: true
-    "@swc/core-linux-arm-gnueabihf":
-      optional: true
-    "@swc/core-linux-arm64-gnu":
-      optional: true
-    "@swc/core-linux-arm64-musl":
-      optional: true
-    "@swc/core-linux-ppc64-gnu":
-      optional: true
-    "@swc/core-linux-s390x-gnu":
-      optional: true
-    "@swc/core-linux-x64-gnu":
-      optional: true
-    "@swc/core-linux-x64-musl":
-      optional: true
-    "@swc/core-win32-arm64-msvc":
-      optional: true
-    "@swc/core-win32-ia32-msvc":
-      optional: true
-    "@swc/core-win32-x64-msvc":
-      optional: true
-  peerDependenciesMeta:
-    "@swc/helpers":
-      optional: true
-  checksum: 10c0/1fecb6764b2b9ad3b5e5ce14fcc78ba8eb6226ef23e51df28f485f3ca207d9587732a61a4a4ec3c439e3fe80955128d9d4780f1976757b7d05f40d803f106781
   languageName: node
   linkType: hard
 
@@ -3334,7 +3334,7 @@ __metadata:
     fork-ts-checker-webpack-plugin: "npm:^9.1.0"
     globals: "npm:^17.14.0"
     i18next: "npm:^27.0.1"
-    i18next-cli: "npm:1.88.0"
+    i18next-cli: "npm:1.93.0"
     jest: "npm:^30.4.2"
     jest-environment-jsdom: "npm:^30.4.1"
     jest-junit: "npm:^17.0.0"
@@ -3801,17 +3801,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:15.1.0":
+  version: 15.1.0
+  resolution: "commander@npm:15.1.0"
+  checksum: 10c0/dd1013291d3e8779c726313616fa23174abc962182d0894ac73017c55d8b1ffe4a72401d91a1173974050536576896dc5279db07d37f929dbad469a16a12c54e
+  languageName: node
+  linkType: hard
+
 "commander@npm:^14.0.3":
   version: 14.0.3
   resolution: "commander@npm:14.0.3"
   checksum: 10c0/755652564bbf56ff2ff083313912b326450d3f8d8c85f4b71416539c9a05c3c67dbd206821ca72635bf6b160e2afdefcb458e86b317827d5cb333b69ce7f1a24
-  languageName: node
-  linkType: hard
-
-"commander@npm:^15.0.0":
-  version: 15.0.0
-  resolution: "commander@npm:15.0.0"
-  checksum: 10c0/539229c171914ea1ccd45ee5f10d924289a12a684ea3a7a44147abe54003c35ed6de9ae4ad198d88c29fdf403dca0428451a388234e6dc01b6faa978fb207206
   languageName: node
   linkType: hard
 
@@ -5443,6 +5443,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"glob@npm:14.0.6":
+  version: 14.0.6
+  resolution: "glob@npm:14.0.6"
+  dependencies:
+    minimatch: "npm:^11.0.5"
+    minipass: "npm:^7.1.3"
+    path-scurry: "npm:^3.0.0"
+  checksum: 10c0/5b8621a6a363abc630de0a542f0f8d0a919a0a5e154626b5fdf1e97425e8709783b0b27cc1eb9d65a5ce097db84e904fe50f8f1dc8c0579c49583c0ac30f8ac7
+  languageName: node
+  linkType: hard
+
 "glob@npm:^10.5.0":
   version: 10.5.0
   resolution: "glob@npm:10.5.0"
@@ -5456,17 +5467,6 @@ __metadata:
   bin:
     glob: dist/esm/bin.mjs
   checksum: 10c0/100705eddbde6323e7b35e1d1ac28bcb58322095bd8e63a7d0bef1a2cdafe0d0f7922a981b2b48369a4f8c1b077be5c171804534c3509dfe950dde15fbe6d828
-  languageName: node
-  linkType: hard
-
-"glob@npm:^14.0.3":
-  version: 14.0.6
-  resolution: "glob@npm:14.0.6"
-  dependencies:
-    minimatch: "npm:^11.0.5"
-    minipass: "npm:^7.1.3"
-    path-scurry: "npm:^3.0.0"
-  checksum: 10c0/5b8621a6a363abc630de0a542f0f8d0a919a0a5e154626b5fdf1e97425e8709783b0b27cc1eb9d65a5ce097db84e904fe50f8f1dc8c0579c49583c0ac30f8ac7
   languageName: node
   linkType: hard
 
@@ -5783,34 +5783,35 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next-cli@npm:1.88.0":
-  version: 1.88.0
-  resolution: "i18next-cli@npm:1.88.0"
+"i18next-cli@npm:1.93.0":
+  version: 1.93.0
+  resolution: "i18next-cli@npm:1.93.0"
   dependencies:
     "@croct/json5-parser": "npm:^0.2.2"
-    "@formatjs/icu-messageformat-parser": "npm:^3.5.22"
-    "@inquirer/confirm": "npm:^6.3.5"
-    "@inquirer/input": "npm:^5.1.9"
-    "@inquirer/password": "npm:^5.2.5"
-    "@inquirer/select": "npm:^5.2.8"
-    "@swc/core": "npm:^1.16.21"
+    "@formatjs/icu-messageformat-parser": "npm:3.5.23"
+    "@inquirer/confirm": "npm:6.4.0"
+    "@inquirer/input": "npm:5.2.0"
+    "@inquirer/password": "npm:5.3.0"
+    "@inquirer/select": "npm:5.3.0"
+    "@swc/core": "npm:1.16.22"
     chokidar: "npm:^5.0.0"
-    commander: "npm:^15.0.0"
-    glob: "npm:^14.0.3"
-    i18next: "npm:^27.0.0"
+    commander: "npm:15.1.0"
+    glob: "npm:14.0.6"
+    html-parse-stringify: "npm:^4.0.1"
+    i18next: "npm:27.2.2"
     i18next-resources-for-ts: "npm:^2.1.2"
     jiti: "npm:^2.7.0"
     jsonc-parser: "npm:^3.3.1"
     magic-string: "npm:^1.4.5"
     messageformat: "npm:^4.1.0"
-    minimatch: "npm:^11.0.4"
-    nano-spawn: "npm:^2.1.0"
-    react-i18next: "npm:^18.0.0"
+    minimatch: "npm:11.0.9"
+    nano-spawn: "npm:3.0.0"
+    react-i18next: "npm:18.0.3"
     yaml: "npm:^2.9.1"
     yocto-spinner: "npm:^1.2.2"
   bin:
     i18next-cli: dist/esm/cli.js
-  checksum: 10c0/444baef980573d2cad11f78110d31b3d513396c3fce8f2202972e2274c8fed8c60c0b5ade04d859283fbc28f1e5e1300d215758d428419366bb6f41d15c58c17
+  checksum: 10c0/e2f043122aacce29547dae8c4acfff0d019aa7878a56e560225156c4d2a8a555a483eaefc5db89f8b88dc882fdf4e6839d4dfe57fd87ed74ddb7e2f3bf922240
   languageName: node
   linkType: hard
 
@@ -5828,15 +5829,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next@npm:^27.0.0":
-  version: 27.1.1
-  resolution: "i18next@npm:27.1.1"
+"i18next@npm:27.2.2":
+  version: 27.2.2
+  resolution: "i18next@npm:27.2.2"
   peerDependencies:
     typescript: ^5 || ^6 || ^7
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/505e7a83a9cd3a4060346dbdae7dd4a439a9a7332e3c52bdafea3fff4abf633978506cf6faabbae53afb160abae55dd5a2c487a7b6947446cef741f60f1c60ae
+  checksum: 10c0/97cb1992b8cba47b428f7065c5bdde71a7bcf63667b648ff147ccac175b10a6860d4a3f2d3e605040e7c18432e9cf6867aaa649671c42526b6e7e2761acc6e75
   languageName: node
   linkType: hard
 
@@ -7421,6 +7422,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"minimatch@npm:11.0.9":
+  version: 11.0.9
+  resolution: "minimatch@npm:11.0.9"
+  dependencies:
+    "@isaacs/nonrecursive-glob-match": "npm:^1.1.0"
+    brace-expansion: "npm:^5.0.12"
+  checksum: 10c0/17c8b5caebaa8c1ecc1c6d58028d192f0e94ebe03976bb9f348920c107cde3185614f74543fe40dfc79ecf0bd74158b816633fc9a8f66da32c0d5327ecbb91e9
+  languageName: node
+  linkType: hard
+
 "minimatch@npm:^10.2.2, minimatch@npm:^9.0.3 || ^10.1.2":
   version: 10.2.6
   resolution: "minimatch@npm:10.2.6"
@@ -7430,7 +7441,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^11.0.4, minimatch@npm:^11.0.5":
+"minimatch@npm:^11.0.5":
   version: 11.0.8
   resolution: "minimatch@npm:11.0.8"
   dependencies:
@@ -7555,10 +7566,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nano-spawn@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "nano-spawn@npm:2.1.0"
-  checksum: 10c0/3becc67ed9ab630b6572feab69a4ef468891ad1f89d5c8643f14a2044cf32ba64533033506208039b1e3d9ddcb2f5f4f87ec360f13b3c4f0774304aedf0f0290
+"nano-spawn@npm:3.0.0":
+  version: 3.0.0
+  resolution: "nano-spawn@npm:3.0.0"
+  checksum: 10c0/9a5e3c31b49eee66713871924bbfd4e8259f53ac93acfd7a023a6d961707f89b1e3dd76912d093dfc8228841fda956f6108c8c46926a2e2933f8e0547ca5e427
   languageName: node
   linkType: hard
 
@@ -8331,9 +8342,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-i18next@npm:^18.0.0":
-  version: 18.0.1
-  resolution: "react-i18next@npm:18.0.1"
+"react-i18next@npm:18.0.3":
+  version: 18.0.3
+  resolution: "react-i18next@npm:18.0.3"
   dependencies:
     html-parse-stringify: "npm:^4.0.1"
   peerDependencies:
@@ -8346,7 +8357,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/a372c17158db33d7deec495dfdff127930334cdc264a931ea942289f25ddbd45e9debb69e986e587db4be8e8eff6ea0a50351b73fd6469be65c1cfa0acde4120
+  checksum: 10c0/69814ea0554b1aff2ef4fb105e965d9e81cfec069394bd0925004f0efbb746e498eb65988a741f9fff628ab0a9ca0c39969607837ed4370d640a51a84c34ce93
   languageName: node
   linkType: hard
 
