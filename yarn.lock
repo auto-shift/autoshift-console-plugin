@@ -1753,12 +1753,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/browser-chromium@npm:~1.65.0":
-  version: 1.65.0
-  resolution: "@playwright/browser-chromium@npm:1.65.0"
+"@playwright/browser-chromium@npm:~1.65.1":
+  version: 1.65.1
+  resolution: "@playwright/browser-chromium@npm:1.65.1"
   dependencies:
-    playwright-core: "npm:1.65.0"
-  checksum: 10c0/51d2f0437eaad369f991a709fcdaf36c9e117969a1da2308fed45b1f86162c634d7c4da1e9d06a47f85a3283d4a223125a7acd89e55ee20b76b3b63dc01e07a5
+    playwright-core: "npm:1.65.1"
+  checksum: 10c0/0645a074d2204a0de54f9972423d2c5b659aa6105589fe7c28d92aaa3147faaa7aa3e9acc3d6d6faa6ba63006b5d7119be39268e214d486a8ed5969b553e3989
   languageName: node
   linkType: hard
 
@@ -3307,7 +3307,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "autoshift-console@workspace:."
   dependencies:
-    "@playwright/browser-chromium": "npm:~1.65.0"
+    "@playwright/browser-chromium": "npm:~1.65.1"
     "@playwright/test": "npm:~1.65.1"
     "@swc/core": "npm:^1.15.47"
     "@swc/jest": "npm:^0.2.39"
@@ -8053,15 +8053,6 @@ __metadata:
     pvutils: "npm:^1.1.3"
     tslib: "npm:^2.8.1"
   checksum: 10c0/33cfab9283702782ae228bd2d4a51b1e9b2e0d6e2141207f29ee95716101ac4fe6e6821882da5f5eca28c74be3964b181b09e95cbbb757b2bd9dca918a5765fd
-  languageName: node
-  linkType: hard
-
-"playwright-core@npm:1.65.0":
-  version: 1.65.0
-  resolution: "playwright-core@npm:1.65.0"
-  bin:
-    playwright-core: cli.js
-  checksum: 10c0/ed905c6fc2457a725c3fdb3ad4500f43c7a1bb2c6e4e8c708e1e314930c7dce446a5756ad073425bf3c6e3ca975e5a35fb0221118e2d51ef7b4b6c6d13d0644c
   languageName: node
   linkType: hard
 
